@@ -1,0 +1,9 @@
+*._.*
+*DS_Store*
+*.idea*
+*.iml
+*__css__*
+*__py__*
+*__pycache__*
+*__js__*
+dp
