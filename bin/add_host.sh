@@ -38,6 +38,11 @@ rm -f default_application.py
 rm -f default_launcher.sh
 chmod +x launcher.sh
 
+# configure default bootstrap template
+cd views/
+sed -e "s/{default}/$1/g" default_bootstrap.html > bootstrap.html
+cd ../
+
 # setting up rights for the app directory
 sudo chown www-data:www-data -R /var/z9/apps/$1
 
@@ -52,5 +57,6 @@ sudo ln -s /var/z9/apps/$1/conf/$1.nginx.conf /etc/nginx/conf.d/$1.conf
 # restarting
 sudo /etc/init.d/$1-app start
 sudo /etc/init.d/nginx restart
+sudo /etc/init.d/$1-app rebuild
 
 echo "Done!"
