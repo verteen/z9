@@ -11,7 +11,7 @@ includes envi, suit, mapex and some more...
 
 * **uwsgi** installed and configured with **python3** support. Also you should add a symlink for uwsgi binary in /usr/local/bin/. 
 
-* **envi**, **suit**, **mapex** located in python3.X/dist-packages directory.
+* **envi**, **suit**, **mapex** located in python3.X/dist-packages directory. Also you should add a symlink for suit/suitup.py in /usr/local/bin/suitup
 
 * **z9-framework** itself should be located in /var/z9/.
 
