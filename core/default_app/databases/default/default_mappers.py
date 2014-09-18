@@ -1,6 +1,20 @@
 
-from z9.mapex import MySqlClient, Pool
+from mapex import MySqlClient, Contours, SqlMapper, Database
 
-production = Pool(MySqlClient, ("localhost", 3306, "root", "password", "{default}"))
-beta = Pool(MySqlClient, ("localhost", 3306, "root", "password", "{default}"))
-unittests = Pool(MySqlClient, ("localhost", 3306, "root", "password", "{default}"))
+
+class DefaultMapper(SqlMapper):
+    def bind(self):
+        """ Настраиваем маппинг """
+        from z9.apps.{default}.models.defaults import Defaults, Deafult
+
+        self.set_new_item(Default)
+        self.set_new_collection(Defaults)
+        self.set_collection_name("Defaults")
+        self.set_map([
+            self.int("id", "ID"),
+            self.str("name", "Name"),
+            ])
+
+
+database = Database(MySqlClient, {Contours.PRODUCTION: ("localhost", 3306, "root", "password", "{default}")})
+database.register_mapper(DefaultMapper)

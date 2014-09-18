@@ -31,6 +31,12 @@ sed -e "s/{default}/$1/g" default_mappers.py > mappers.py
 rm -f default_mappers.py
 cd ../../
 
+# configure default models module
+cd models/
+sed -e "s/{default}/$1/g" default_models.py > common.py
+rm -f default_models.py
+cd ../
+
 # configure application.py and launcher
 sed -e "s/{default}/$1/g" default_application.py > application.py
 sed -e "s/{default}/$1/g" default_launcher.sh > launcher.sh
