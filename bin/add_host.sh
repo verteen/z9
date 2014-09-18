@@ -22,14 +22,13 @@ sed -e "s/{default}/$1/g" default.nginx.conf > $1.nginx.conf
 sed -e "s/{default}/$1/g" default.uwsgi.ini > $1.uwsgi.ini
 rm -f default.nginx.conf
 rm -f default.uwsgi.ini
+cd ../
 
 # configure default mappers.py in default project database
-cd ../databases/
-mv default $1
-cd $1/
-sed -e "s/{default}/$1/g" default_mappers.py > mappers.py
+cd mappers/
+sed -e "s/{default}/$1/g" default_mappers.py > common.py
 rm -f default_mappers.py
-cd ../../
+cd ../
 
 # configure default models module
 cd models/
@@ -47,6 +46,7 @@ chmod +x launcher.sh
 # configure default bootstrap template
 cd views/
 sed -e "s/{default}/$1/g" default_bootstrap.html > bootstrap.html
+rm -f default_bootstrap.html
 cd ../
 
 # setting up rights for the app directory

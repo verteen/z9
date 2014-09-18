@@ -1,11 +1,11 @@
 
 
 from mapex import EntityModel, CollectionModel
-from z9.apps.{default}.databases.{default}.mappers import DefaultMapper
+from z9.apps.{default}.mappers.common import ExampleMapper
 
 class Examples(CollectionModel):
-    mapper = DefaultMapper
+    mapper = ExampleMapper
 
 
 class Example(EntityModel):
-    mapper = DefaultMapper
+    mapper = ExampleMapper
