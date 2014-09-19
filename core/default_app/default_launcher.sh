@@ -20,7 +20,7 @@ rebuild)
         echo "Перекомпиляция шаблонов"
         /usr/local/bin/suitup /var/z9/apps/{default}/views/
         echo "Пeрезапуск uwsgi приложения {default}..."
-        kill `cat /var/z9/apps/admin/{default}.uwsgi.pid` > /dev/null
+        kill `cat /var/z9/apps/{default}/{default}.uwsgi.pid` > /dev/null
         ;;
 restart)
         echo "Пeрезапуск uwsgi приложения {default}..."
