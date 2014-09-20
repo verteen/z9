@@ -24,6 +24,12 @@ rm -f default.nginx.conf
 rm -f default.uwsgi.ini
 cd ../
 
+# configure exceptions directory
+cd exceptions/
+sed -e "s/{default}/$1/g" default_exceptions.py > common.py
+rm -f default_exceptions.py
+cd ../
+
 # configure default mappers.py in default project database
 cd mappers/
 sed -e "s/{default}/$1/g" default_mappers.py > common.py
@@ -59,6 +65,10 @@ sudo chmod 777 -R /var/z9/apps/$1
 # make soft-links for uwsgi launcher and nginx-conf
 sudo ln -s /var/z9/apps/$1/launcher.sh /etc/init.d/$1-app
 sudo ln -s /var/z9/apps/$1/conf/$1.nginx.conf /etc/nginx/conf.d/$1.conf
+
+sudo ln -s /var/z9/apps/$1/views/__css__/all.css /var/z9/apps/$1/static/css/all.css
+sudo ln -s /var/z9/apps/$1/views/__js__/all.js /var/z9/apps/$1/static/js/all.js
+sudo ln -s /usr/local/lib/python3.4/dist-packages/suit/Suit.js /var/z9/apps/$1/static/js/suit.js
 
 # restarting
 sudo /etc/init.d/$1-app start

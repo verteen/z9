@@ -1,12 +1,13 @@
 import re
 import unittest
-from mapex import Pool, SqlMapper
+from mapex import Pool, SqlMapper, EntityModel
 from mapex import MySqlClient, MsSqlClient, PgSqlClient, MongoClient
 from envi import Application as EnviApplication, ControllerMethodResponseWithTemplate
 from suit.Suit import Suit, TemplateNotFound
 from inspect import isabstract, isclass
 
 from z9.core.utils import get_module_members
+
 
 class Application(EnviApplication):
     """ Стандартное приложение z9 """
@@ -113,9 +114,32 @@ class Database(object):
             mapper.pool = self.pool
 
 
-class UnitTest(unittest.TestCase):
-    def __init__(self):
-        super().__init__()
 
-    def set_application(self, app: Application):
-        app.contour = Contours.UNITTESTS
+class EntityModelTest(unittest.TestCase):
+    model_for_test = EntityModel
+
+    def setUp(self):
+        self.tearDown()
+        if self.model_for_test.mapper:
+            self.model_for_test.mapper.up()
+
+    def tearDown(self):
+        if self.model_for_test.mapper:
+            self.model_for_test.mapper.down()
+
+
+class CommonException(Exception):
+    """ Базовый тип исключений """
+    message = ""
+
+    def __init__(self, data=None):
+        super().__init__(self.message)
+        self.data = data or {}
+
+    @classmethod
+    def name(cls) -> str:
+        """ Возвращает полное имя исключения
+        @return:
+        """
+        match = re.search("'(.+)'", str(cls))
+        return match.group(1) if match else cls.__name__
