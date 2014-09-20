@@ -120,12 +120,9 @@ class EntityModelTest(unittest.TestCase):
 
     def setUp(self):
         self.tearDown()
-        if self.model_for_test.mapper:
-            self.model_for_test.mapper.up()
 
     def tearDown(self):
-        if self.model_for_test.mapper:
-            self.model_for_test.mapper.down()
+        self.model_for_test().get_new_collection().delete()
 
 
 class CommonException(Exception):
