@@ -25,9 +25,9 @@ class AuthController(Controller):
             "{}auth/auth".format(cls.root),
         ]:
             return None
-        auth_service = AuthController.auth_service()
+
         try:
-            return auth_service.authentificate_by_request(request)
+            return cls.auth_service().authentificate_by_request(request)
         except (NoDataForAuth, IncorrectToken):
             app.redirect("{}auth/login/".format(cls.root))
 
@@ -37,8 +37,8 @@ class AuthController(Controller):
         """ Страница с формой авторизации """
         request.response.set_cookie("token", "", path="/", expires=datetime.now() - timedelta(seconds=30*60))
 
-    @staticmethod
-    def auth(request: Request, **kwargs) -> bool:
+    @classmethod
+    def auth(cls, request: Request, **kwargs) -> bool:
         """ Выполняет аутентификацию и авторизацию пользователя
 
         @param request: Запрос пользователя
@@ -48,22 +48,21 @@ class AuthController(Controller):
         @rtype : bool
 
         """
-        auth_service = AuthController.auth_service()
         try:
-            account = auth_service.authentificate_by_request(request)
+            account = cls.auth_service().authentificate_by_request(request)
             if account:
                 request.response.set_cookie(
                     "token", account.set_new_token(), path="/", expires=datetime.now() + timedelta(seconds=30*60)
                 )
-                return {"redirect_to": AuthController.root}
+                return {"redirect_to": cls.root}
         except (NoDataForAuth, IncorrectToken) as err:
             request.response.set_cookie(
                 "token", "", path="/", expires=datetime.now() - timedelta(seconds=30*60)
             )
             raise err
 
-    @staticmethod
-    def unauth(app: Application, request: Request, **kwargs) -> bool:
+    @classmethod
+    def unauth(cls, app: Application, request: Request, **kwargs) -> bool:
         """ Выполняет деаутентификацию
 
         @param request: Запрос пользователя
@@ -74,15 +73,14 @@ class AuthController(Controller):
 
         """
         request.response.set_cookie("token", "", path="/", expires=datetime.now() - timedelta(seconds=30*60))
-        app.redirect(AuthController.root)
+        app.redirect(cls.root)
 
-    @staticmethod
-    def change_password(request: Request, **kwargs):
+    @classmethod
+    def change_password(cls, request: Request, **kwargs):
         """ Меняет пароль аккаунта на новый
 
         @param request:
         @param kwargs:
         @return:
         """
-        auth_service = AuthController.auth_service()
-        return auth_service.change_password(request.get("login"))
+        return cls.auth_service().change_password(request.get("login"))
