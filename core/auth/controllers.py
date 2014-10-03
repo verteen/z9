@@ -5,14 +5,15 @@ from envi import Application, Request, Controller, template
 from z9.core.auth.models import AuthentificationService
 from z9.core.auth.exceptions import NoDataForAuth, IncorrectToken
 
+
 class AuthController(Controller):
 
     default_action = "login"
     auth_service = AuthentificationService
     root = "/"
 
-    @staticmethod
-    def user_initialization_hook_static(app: Application, request: Request):
+    @classmethod
+    def user_initialization_hook_static(cls, app: Application, request: Request):
         """
         Стандартный алгоритм аутентификации
         :param app: Экземпляр приложения
@@ -20,16 +21,15 @@ class AuthController(Controller):
         :return: Аккаунт пользователя
         """
         if request.path in [
-                    "%sauth/login" % AuthController.root,
-                    "%sauth/auth" % AuthController.root,
-                    "%sauth/change_password" % AuthController.root
+            "{}auth/login".format(cls.root),
+            "{}auth/auth".format(cls.root),
         ]:
             return None
         auth_service = AuthController.auth_service()
         try:
             return auth_service.authentificate_by_request(request)
         except (NoDataForAuth, IncorrectToken):
-            app.redirect("%sauth/login/" % AuthController.root)
+            app.redirect("{}auth/login/".format(cls.root))
 
     @staticmethod
     @template("views.login")
