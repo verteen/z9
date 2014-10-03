@@ -9,6 +9,7 @@ class AuthController(Controller):
 
     default_action = "login"
     auth_service = AuthentificationService
+    root = "/"
 
     @staticmethod
     def user_initialization_hook_static(app: Application, request: Request):
@@ -18,13 +19,17 @@ class AuthController(Controller):
         :param request: Запрос пользователя
         :return: Аккаунт пользователя
         """
-        if request.path in ["/auth/login", "/auth/auth", "/auth/change_password"]:
+        if request.path in [
+                    "%sauth/login" % AuthController.root,
+                    "%sauth/auth" % AuthController.root,
+                    "%sauth/change_password" % AuthController.root
+        ]:
             return None
         auth_service = AuthController.auth_service()
         try:
             return auth_service.authentificate_by_request(request)
         except (NoDataForAuth, IncorrectToken):
-            app.redirect("/auth/login/")
+            app.redirect("%sauth/login/" % AuthController.root)
 
     @staticmethod
     @template("views.login")
@@ -50,7 +55,7 @@ class AuthController(Controller):
                 request.response.set_cookie(
                     "token", account.set_new_token(), path="/", expires=datetime.now() + timedelta(seconds=30*60)
                 )
-                return {"redirect_to": "/"}
+                return {"redirect_to": AuthController.root}
         except (NoDataForAuth, IncorrectToken) as err:
             request.response.set_cookie(
                 "token", "", path="/", expires=datetime.now() - timedelta(seconds=30*60)
@@ -69,7 +74,7 @@ class AuthController(Controller):
 
         """
         request.response.set_cookie("token", "", path="/", expires=datetime.now() - timedelta(seconds=30*60))
-        app.redirect("/")
+        app.redirect(AuthController.root)
 
     @staticmethod
     def change_password(request: Request, **kwargs):
