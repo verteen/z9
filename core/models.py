@@ -1,6 +1,6 @@
 import re
 import unittest
-from mapex import Pool, SqlMapper, EntityModel
+from mapex import Pool, SqlMapper, EntityModel, EmbeddedObject
 from mapex import MySqlClient, MsSqlClient, PgSqlClient, MongoClient
 from envi import Application as EnviApplication, ControllerMethodResponseWithTemplate
 from suit.Suit import Suit, TemplateNotFound
@@ -124,20 +124,37 @@ class EntityModelTest(unittest.TestCase):
         self.model_for_test().get_new_collection().delete()
 
 
-class CommonException(Exception):
-    """ Базовый тип исключений """
-    message = ""
 
-    def __init__(self, data=None):
-        super().__init__(self.message)
-        self.data = data or {}
+class Phone(EmbeddedObject):
+    """ Класс для представления телефонных номеров """
+    value_type = str
 
-    @classmethod
-    def name(cls) -> str:
-        """ Возвращает полное имя исключения
-        @return:
+    def __init__(self, number, default_if_error=False):
+        self._digits = re.sub("[^\d]", "", str(number))
+        self._default_if_error = default_if_error
+        self._validate()
+
+    def __str__(self):
+        v = self._normalize()
+        return v if v else ""
+
+    def _normalize(self) -> str:
+        """ Приводит номер к правильному строковому представлению """
+        return "+7%s" % (
+            self._digits[1 if self._digits[0] in ["7", "8"] else 0:11]
+        ) if len(self._digits) >= 10 else self._default_if_error
+
+    def get_value(self) -> str:
+        """ Возвращает обозначение пола клиента для базы данных """
+        v = self._normalize()
+        return v if v else ""
+
+    def _validate(self):
         """
-        match = re.search("'(.+)'", str(cls))
-        return match.group(1) if match else cls.__name__
+        Проверяет корректность указания номера телефона
+        @return: Телефонный номер, приведенный к единому формату
+        @raise InvalidPhoneNumber: Если переданный номер некорректен и его невозможно отформатировать
 
-
+        """
+        if len(self._digits) < 10 and self._default_if_error is False:
+            raise InvalidPhoneNumber(self._normalize())
