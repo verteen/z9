@@ -1,7 +1,7 @@
 """ Тестирование моделей UI """
 from unittest import TestCase
 
-from core.web.models import Menu, MenuItem
+from z9.core.web.models import Menu, MenuItem
 
 
 class MenuTest(TestCase):
