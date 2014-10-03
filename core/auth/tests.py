@@ -6,6 +6,8 @@ from z9.core.models import EntityModelTest
 from z9.core.auth.models import Account, Accounts, AuthentificationService
 from z9.core.auth.exceptions import *
 
+from z9.core.utils import md5
+
 
 class AccountTests(EntityModelTest):
     """ Тестирование основных аспектов работы с учетными записями """
@@ -84,3 +86,13 @@ class AuthentificationServiceTests(EntityModelTest):
         Account({"login": "login", "password": "12345", "token": "12345678"}).save()
         authentificated_account = AuthentificationService().authentificate(token="12345678")
         self.assertTrue(isinstance(authentificated_account, Account))
+
+    def test_change_password(self):
+        """ Сервис аутентификации позволяет менять пароль пользователя """
+        account = Account({"login": "login", "password": "12345", "token": "12345678"}).save()
+        self.assertRaises(IncorrectLogin, AuthentificationService().change_password, "weird_login")
+
+        new_password = AuthentificationService().change_password("login")
+        account.refresh()
+        self.assertNotEqual(md5("12345"), account.password)
+        self.assertEqual(md5(new_password), account.password)

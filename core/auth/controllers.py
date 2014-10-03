@@ -8,6 +8,7 @@ from z9.core.auth.exceptions import NoDataForAuth, IncorrectToken
 class AuthController(Controller):
 
     default_action = "login"
+    auth_service = AuthentificationService
 
     @staticmethod
     def user_initialization_hook_static(app: Application, request: Request):
@@ -17,9 +18,9 @@ class AuthController(Controller):
         :param request: Запрос пользователя
         :return: Аккаунт пользователя
         """
-        if request.path in ["/auth/login", "/auth/auth"]:
+        if request.path in ["/auth/login", "/auth/auth", "/auth/change_password"]:
             return None
-        auth_service = AuthentificationService()
+        auth_service = AuthController.auth_service()
         try:
             return auth_service.authentificate_by_request(request)
         except (NoDataForAuth, IncorrectToken):
@@ -42,7 +43,7 @@ class AuthController(Controller):
         @rtype : bool
 
         """
-        auth_service = AuthentificationService()
+        auth_service = AuthController.auth_service()
         try:
             account = auth_service.authentificate_by_request(request)
             if account:
@@ -69,3 +70,14 @@ class AuthController(Controller):
         """
         request.response.set_cookie("token", "", path="/", expires=datetime.now() - timedelta(seconds=30*60))
         app.redirect("/")
+
+    @staticmethod
+    def change_password(request: Request, **kwargs):
+        """ Меняет пароль аккаунта на новый
+
+        @param request:
+        @param kwargs:
+        @return:
+        """
+        auth_service = AuthController.auth_service()
+        return auth_service.change_password(request.get("login"))

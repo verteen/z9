@@ -30,6 +30,12 @@ sed -e "s/{default}/$1/g" default_exceptions.py > common.py
 rm -f default_exceptions.py
 cd ../
 
+# configure controllers directory
+cd controllers/
+sed -e "s/{default}/$1/g" default_controllers.py > common.py
+rm -f default_controllers.py
+cd ../
+
 # configure default mappers.py in default project database
 cd mappers/
 sed -e "s/{default}/$1/g" default_mappers.py > common.py

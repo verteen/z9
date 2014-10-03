@@ -129,3 +129,18 @@ class AuthentificationService(object):
             return account_found
         else:
             raise IncorrectLogin()
+
+    def change_password(self, login: str) -> str:
+        """
+        Меняет пароль аккаунта и возвращает новый
+
+        @param login: Логин
+        @return: Новый пароль
+        """
+        account = self.accounts.get_item({"login": login})
+        if not account:
+            raise IncorrectLogin()
+        account.set_new_token()
+        account.password = account.token
+        account.save()
+        return account.token
