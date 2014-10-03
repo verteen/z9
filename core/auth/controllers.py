@@ -23,6 +23,7 @@ class AuthController(Controller):
         if request.path in [
             "{}auth/login".format(cls.root),
             "{}auth/auth".format(cls.root),
+            "{}auth/change_password".format(cls.root),
         ]:
             return None
 
