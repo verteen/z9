@@ -1,5 +1,5 @@
 
-from z9.core.models import CommonException
+from z9.core.exceptions import CommonException
 
 
 # noinspection PyDocstring
