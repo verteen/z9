@@ -141,6 +141,28 @@ class AuthentificationService(object):
         if not account:
             raise IncorrectLogin()
         account.set_new_token()
-        account.password = account.token
+        account.password = self.gen_password()
         account.save()
-        return account.token
+        return account.password
+
+    @staticmethod
+    def gen_password():
+        """
+        Генерирует читабельный пароль
+        :return:
+        """
+        import random
+        digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        symbols = ["!", "#", "@", "*", "%", "^", "&", "/", "\\"]
+        characters = ["a", "b", "d", "e", "f", "g", "h", "j", "k", "m", "n",
+                      "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" ]
+        digit = str(random.choice(digits))
+        symbol = random.choice(symbols)
+        upper_char = random.choice(characters).upper()
+        random.shuffle(characters)
+        random_start = random.choice([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
+        random_end = random_start + 5
+        chars = characters[random_start:random_end]
+        l = [digit, symbol, upper_char] + chars
+        random.shuffle(l)
+        return "".join(l)
