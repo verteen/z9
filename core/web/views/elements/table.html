@@ -1,0 +1,120 @@
+
+<div class="table_action_buttons btn-toolbar">
+    &nbsp;<breakpoint name="buttons"></breakpoint>
+</div>
+<table class="table table-condensed table_view ui-container" data-template-name="elements.table">
+    <caption><var>table.caption</var></caption>
+    <if><condition><var filter="length">table.rows</var> > 0</condition><true>
+    <thead>
+        <tr>
+            <th><input class="select_all_checkbox" type="checkbox" /></th>
+            <list for="column_name" in="table.header">
+                <th><var>column_name</var></th>
+            </list>
+        </tr>
+    </thead>
+    <tbody>
+        <list for="id,properties" in="table.rows">
+            <tr class="entire_row">
+                <td><input class="row_checkbox" name="row_id" type="checkbox" value="<var>id</var>" /></td>
+                <list for="prop,val" in="properties">
+                    <td data-property="<var>prop</var>"><var>val</var></td>
+                </list>
+            </tr>
+        </list>
+    </tbody>
+    </true></if>
+</table>
+
+<style>
+    .table_action_buttons { min-height: 36px; }
+    .table_action_buttons button { display: none; }
+    .table_view tr { cursor: pointer; }
+    .table_view tr:hover { background-color: lightgray; }
+    .row_selected { background-color: #015988; color: white; }
+    .row_selected:hover { background-color: #015988 !important; color: white !important; }
+    .table_view tr::selection,
+    .table_view tr td::selection,
+    .table_view::selection 				{ background: transparent; color: inherit; }
+    .table_view tr::-moz-selection,
+    .table_view tr td::-moz-selection,
+    .table_view::-moz-selection 		{  background: transparent; color: inherit; }
+
+</style>
+
+<script>
+(function(internal) {
+
+    internal.ui.all_trigger = "input.select_all_checkbox";
+    internal.ui.row_checkbox = "td > input.row_checkbox";
+    internal.ui.row = "tr.entire_row";
+    internal.ui.buttons = ".table_action_buttons";
+
+    internal.ui.self_selector = "table.table_view";
+
+    internal.api.createListeners = function () {
+        suit.connect(internal.ui.row, "click", function() {
+            $(this).parent().parent().find(".row_selected").removeClass("row_selected");
+            $(this).addClass("row_selected");
+            internal.events_controller.broadcast("RowClicked", $(this));
+        });
+
+        suit.connect(internal.ui.row, "dblclick", function() {
+            internal.events_controller.broadcast("RowDoubleClicked", $(this));
+            return false;
+        });
+
+        suit.connect(internal.ui.all_trigger, "click", function() {
+            if ($(this).prop('checked')) {
+                $(internal.ui.buttons).find("button").show();
+                internal.events_controller.broadcast("MultipleRowsSelected");
+            } else {
+                $(internal.ui.buttons).find("button").hide();
+                internal.events_controller.broadcast("NoRowsSelected");
+            }
+            $($(this).parents("table")[0]).find("input").prop("checked", $(this).prop('checked'));
+        });
+
+        suit.connect(internal.ui.row_checkbox, "click", function() {
+            var table = $($(this).parents("table")[0]);
+            table.find(internal.ui.all_trigger).prop('checked', false);
+            var checked_count = table.find("input.row_checkbox:checked").length;
+
+            if ($(this).prop('checked')) {
+                $(internal.ui.buttons).find("button").show();
+            } else {
+                if (checked_count > 0) {
+                    $(internal.ui.buttons).find("button").show();
+                } else {
+                    $(internal.ui.buttons).find("button").hide();
+                    $(internal.ui.buttons).find("button").hide();
+                }
+            }
+
+            if (checked_count == 1) {
+                internal.events_controller.broadcast("SingleRowSelected");
+            } else if (checked_count == 0 ) {
+                internal.events_controller.broadcast("NoRowsSelected");
+            } else {
+                internal.events_controller.broadcast("MultipleRowsSelected");
+            }
+        });
+    };
+
+    /**
+     * Возвращает ID выбранных на текущий момент строк таблицы
+     * @returns {Array}
+     */
+    internal.api.get_selected = function() {
+        var arr = [];
+        $(internal.ui.self_selector).find("input[name=row_id]:checked").each(function() {
+            arr.push($(this).val());
+        });
+        return arr;
+    };
+
+    internal.api.on = internal.events_controller.on;
+
+    return internal;
+})
+</script>
