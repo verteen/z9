@@ -5,8 +5,8 @@ class CommonException(Exception):
     """ Базовый тип исключений """
     message = ""
 
-    def __init__(self, data=None):
-        super().__init__(self.message)
+    def __init__(self, message=None, data=None):
+        super().__init__(message if message else self.message)
         self.data = data or {}
 
     @classmethod
