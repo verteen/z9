@@ -141,9 +141,10 @@ class AuthentificationService(object):
         if not account:
             raise IncorrectLogin()
         account.set_new_token()
-        account.password = self.gen_password()
+        new_passw = self.gen_password()
+        account.password = new_passw
         account.save()
-        return account.password
+        return new_passw
 
     @staticmethod
     def gen_password():

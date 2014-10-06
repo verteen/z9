@@ -7,6 +7,7 @@ from suit.Suit import Suit, TemplateNotFound
 from inspect import isabstract, isclass
 
 from z9.core.utils import get_module_members
+from z9.core.exceptions import InvalidPhoneNumber
 
 
 class Application(EnviApplication):
@@ -122,7 +123,6 @@ class EntityModelTest(unittest.TestCase):
 
     def tearDown(self):
         self.model_for_test().get_new_collection().delete()
-
 
 
 class Phone(EmbeddedObject):
