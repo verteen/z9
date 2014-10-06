@@ -1,4 +1,6 @@
 """ Модели для веб разработки """
+from mapex import CollectionModel
+from collections import OrderedDict
 
 
 class MenuItem(object):
@@ -101,3 +103,67 @@ class Menu(object):
             "sub_menu": self.get_sub_menu(url).get_full(),
             "breadcrumbs": self.get_breadcrumbs(url)
         }
+
+
+class TableView(CollectionModel):
+    """ Класс для представления коллекции в виде структуры данных пригодной для использования в шаблонизаторе """
+    def __init__(self, *boundaries):
+        super().__init__(*boundaries)
+        self.template = ""
+        self.caption = ""
+        self.header = []
+        self.properties = []
+        self._rows = None
+        self.boundaries = {}
+        for bounds in boundaries:
+            self.boundaries.update(bounds)
+        self.primary_extracter = lambda rm: rm
+
+    @property
+    def rows(self):
+        """ Возвращает строки таблицы
+        :return:
+        """
+        if self._rows is None:
+            self._rows = {
+                self.primary_extracter(it): self.ordered({
+                    p: str(it.fetch(p)) for p in self.properties
+                }, self.properties) for it in self.get_items(self.boundaries)
+            }
+        return self._rows
+
+    @staticmethod
+    def ordered(unordered: dict, order_keys: list) -> dict:
+        """ Возвращает копию словаря, отсортированную в соответствии со списком ключей
+        :param unordered: Словарь для сортировки
+        :param order_keys: Список ключей
+        :return: Отсортированный словарь
+        """
+        ordered = OrderedDict()
+        for key in order_keys:
+            ordered[key] = unordered.get(key)
+        return ordered
+
+    @rows.setter
+    def rows(self, rows: dict):
+        """ Заполняет объект таблицы указанными строками
+        :param rows: Строки таблицы в виде словаря {id_строки: {"поле": "значение"}}
+        """
+        self._rows = rows
+
+    def set_caption(self, caption: str):
+        """ Устанавливает заголовок таблицы
+        :param caption: Заголовок для таблицы
+        :return:
+        """
+        self.caption = caption
+
+    def set_sub_boundaries(self, sub_boundaries: dict):
+        """ Устанавливаеь дополнительные ограничения на таблицу (Что-то вроде фильтра или поиска по таблице)
+        :param sub_boundaries: Дополнительные условия выборки записей
+        """
+        self.boundaries.update(sub_boundaries)
+
+    def represent(self):
+        """ Возвращает коллекцию в виде пригодном для шаблонизатора """
+        return {"template": self.template, "caption": self.caption, "header": self.header, "rows": self.rows}
