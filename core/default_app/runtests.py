@@ -9,11 +9,20 @@ except ImportError:
 
 from tests import ExampleTest
 
-suite = unittest.TestSuite(tests=(
-    unittest.loader.findTestCases(ExampleTest)
-))
+
+tests = {
+    "ExampleTest": ExampleTest
+}
 
 if __name__ == "__main__":
     from application import application
     application.start_testing()
-    sys.exit(not runner.run(suite).wasSuccessful())
+    test_name = sys.argv[1] if len(sys.argv) > 1 else None
+    tests = tuple(
+        [
+            unittest.loader.findTestCases(tests[test_suit_name])
+            for test_suit_name in tests
+            if test_suit_name == test_name or not test_name
+        ]
+    )
+    sys.exit(not runner.run(unittest.TestSuite(tests=tests)).wasSuccessful())
