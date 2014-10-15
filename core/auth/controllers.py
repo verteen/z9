@@ -32,6 +32,22 @@ class AuthController(Controller):
         except (NoDataForAuth, IncorrectToken):
             app.redirect("{}auth/login/".format(cls.root))
 
+    @classmethod
+    def user_initialization_hook(cls, request: Request):
+        """
+        Стандартный алгоритм аутентификации
+        :param request: Запрос пользователя
+        :return: Аккаунт пользователя
+        """
+        if request.path in [
+            "{}auth/login".format(cls.root),
+            "{}auth/auth".format(cls.root),
+            "{}auth/change_password".format(cls.root),
+            ]:
+            return None
+        return cls.auth_service().authentificate_by_request(request)
+
+
     @staticmethod
     @template("views.login")
     def login(request: Request, **kwargs):
