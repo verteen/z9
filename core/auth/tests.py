@@ -95,4 +95,4 @@ class AuthentificationServiceTests(EntityModelTest):
         new_password = AuthentificationService().change_password("login")
         account.refresh()
         self.assertNotEqual("12345", account.password)
-        self.assertEqual(new_password, account.password)
+        self.assertEqual(md5(new_password), account.password)
