@@ -141,7 +141,7 @@ class TableView(CollectionModel):
         """
         ordered = OrderedDict()
         for key in order_keys:
-            ordered[key] = unordered.get(key)
+            ordered[key.replace(".", "_")] = unordered.get(key)
         return ordered
 
     @rows.setter
