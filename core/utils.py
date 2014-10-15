@@ -3,10 +3,16 @@
 import re
 import os
 import hashlib
+import unittest
+import webtest
+import json
 from itertools import filterfalse, chain
 from importlib import import_module
 from inspect import getmembers
 from fcntl import flock, LOCK_EX, LOCK_NB
+
+from z9.core.exceptions import CommonException
+
 
 root_path = "%s/../" % os.path.dirname(os.path.abspath(__file__))
 
@@ -58,48 +64,6 @@ def trim_spaces(string):
     return string
 
 
-def get_cyrillic_font_name():
-    """ Устанавливает кириллический фонт и возвращает его имя для использования """
-    from reportlab.pdfbase import pdfmetrics
-    fname = '%s/sf/common/fonts/arial' % root_path
-    face_name = 'ArialMT'
-    cyr_face = pdfmetrics.EmbeddedType1Face(fname+'.afm', fname+'.pfb')
-    cyrenc = pdfmetrics.Encoding('CP1251')
-    cp1251 = (
-        'afii10051', 'afii10052', 'quotesinglbase', 'afii10100', 'quotedblbase',
-        'ellipsis', 'dagger', 'daggerdbl', 'Euro', 'perthousand', 'afii10058',
-        'guilsinglleft', 'afii10059', 'afii10061', 'afii10060', 'afii10145',
-        'afii10099', 'quoteleft', 'quoteright', 'quotedblleft', 'quotedblright',
-        'bullet', 'endash', 'emdash', 'tilde', 'trademark', 'afii10106',
-        'guilsinglright', 'afii10107', 'afii10109', 'afii10108', 'afii10193',
-        'space', 'afii10062', 'afii10110', 'afii10057', 'currency', 'afii10050',
-        'brokenbar', 'section', 'afii10023', 'copyright', 'afii10053',
-        'guillemotleft', 'logicalnot', 'hyphen', 'registered', 'afii10056',
-        'degree', 'plusminus', 'afii10055', 'afii10103', 'afii10098', 'mu1',
-        'paragraph', 'periodcentered', 'afii10071', 'afii61352', 'afii10101',
-        'guillemotright', 'afii10105', 'afii10054', 'afii10102', 'afii10104',
-        'afii10017', 'afii10018', 'afii10019', 'afii10020', 'afii10021',
-        'afii10022', 'afii10024', 'afii10025', 'afii10026', 'afii10027',
-        'afii10028', 'afii10029', 'afii10030', 'afii10031', 'afii10032',
-        'afii10033', 'afii10034', 'afii10035', 'afii10036', 'afii10037',
-        'afii10038', 'afii10039', 'afii10040', 'afii10041', 'afii10042',
-        'afii10043', 'afii10044', 'afii10045', 'afii10046', 'afii10047',
-        'afii10048', 'afii10049', 'afii10065', 'afii10066', 'afii10067',
-        'afii10068', 'afii10069', 'afii10070', 'afii10072', 'afii10073',
-        'afii10074', 'afii10075', 'afii10076', 'afii10077', 'afii10078',
-        'afii10079', 'afii10080', 'afii10081', 'afii10082', 'afii10083',
-        'afii10084', 'afii10085', 'afii10086', 'afii10087', 'afii10088',
-        'afii10089', 'afii10090', 'afii10091', 'afii10092', 'afii10093',
-        'afii10094', 'afii10095', 'afii10096', 'afii10097'
-    )
-    for i in range(128, 256):
-        cyrenc[i] = cp1251[i-128]
-    pdfmetrics.registerEncoding(cyrenc)
-    pdfmetrics.registerTypeFace(cyr_face)
-    pdfmetrics.registerFont(pdfmetrics.Font(face_name+'1251', face_name, 'CP1251'))
-    return face_name+'1251'
-
-
 def chunked(l: list, size: int) -> [[]]:
     """ Возвращает список, разбитый на несколько списков заданного размера
     @param l: исходный список
@@ -144,3 +108,82 @@ def with_lock(lock_name, cb):
 
         return cb()
 
+
+class FunctionalTestCase(unittest.TestCase):
+    """ Класс для создания функциональных тестов """
+    application=None
+
+    def setUp(self):
+        super().setUp()
+        self.app = webtest.TestApp(self.application)
+        self.maxDiff = None
+
+    def xhr_query(self, url: str, data: dict=None, auth_token: str=None):
+        """ Выполняет запрос к приложению методом POST, используя для авторизации переданный токен
+        :param url: URL для запроса
+        :param data: Данные для запроса
+        :param auth_token: Токен для авторизации
+        :return:
+        """
+        data = data if data else {}
+        data.update({"token": auth_token})
+        response = self.app.post(url, {"json": json.dumps(data)}, xhr=True)
+        self.assertEqual("200 OK", response.status)
+        return response.body
+
+    # noinspection PyPep8Naming,PyMethodMayBeStatic
+    def assertResponseEqual(self, expected, value):
+        """
+        Проверяет, совпадают ли переданные значения в бинарном представлении
+        @param expected: Ожидаемое значение
+        @param value: Проверяемое значение
+        @raise AssertionError: Если значения не совпадают
+        """
+        if type(expected) is dict:
+            self.assertDictEqual(expected, json.loads(value.decode()))
+        else:
+            self.assertEqual(expected, json.loads(value.decode()))
+
+    def from_json(self, response_text):
+        """ Конвертирует ответ сервера из json'a
+        Просто для удобства
+        @param response_text:
+        @return:
+        """
+        return json.loads(response_text.decode())
+
+    # noinspection PyPep8Naming
+    def assertResponseRaises(self, excClass, response, custom_message=None):
+        """ Проверяет что в ответе есть исключение
+        @param excClass: Ожидаемое исключение
+        @param response: Тело ответа
+        """
+        force_class_name = str(excClass).replace("<class '", "").replace("'>", "")
+        self.assertResponseEqual(
+            {
+                "error": {
+                    "type": excClass.name() if issubclass(excClass, CommonException) else force_class_name,
+                    "message": custom_message if custom_message else excClass.message,
+                    "data": {}
+                }
+            },
+            response
+        )
+
+    # noinspection PyPep8Naming
+    def assertResponseCookiesContains(self, response, cookie: str, value: str=None) -> bool:
+        """
+        Проверяет, есть ли в заголовках ответа установка cookie с указанным именем key и значением value (если указано)
+        @param cookie: Имя cookie
+        @param value: Значение cookie (Опционально)
+        @return:
+        """
+        cookies = {}
+        for header in response.headers:
+            header_key, header_value = header, response.headers[header]
+            if header_key == 'Set-Cookie':
+                cookie_name, cookie_value, *junk = header_value.split("=")
+                cookies[cookie_name] = cookie_value
+        self.assertIn(cookie, cookies)
+        if value:
+            self.assertEqual(value, cookies.get(cookie))
