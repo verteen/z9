@@ -87,8 +87,8 @@ class Database(object):
         # noinspection PyDictCreation
         self.map = {}
         self.map[Contours.PRODUCTION] = connection_tuples_map.get(Contours.PRODUCTION)
-        self.map[Contours.BETA] = connection_tuples_map.get(Contours.BETA, self.map[Contours.PRODUCTION])
-        self.map[Contours.UNITTESTS] = connection_tuples_map.get(Contours.UNITTESTS, self.map[Contours.BETA])
+        self.map[Contours.BETA] = connection_tuples_map.get(Contours.BETA)
+        self.map[Contours.UNITTESTS] = connection_tuples_map.get(Contours.UNITTESTS)
 
         self.pool = None
         self.init_pool(Contours.UNITTESTS)
