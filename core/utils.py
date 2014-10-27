@@ -90,6 +90,18 @@ def get_class_name(cls) -> str:
     match = re.search("'(.+)'", str(cls))
     return match.group(1) if match else cls.__name__
 
+def get_class(path):
+    """
+    Возвращает класс по полному пути до него (как используется при импорте)
+    @return:
+    """
+    path = path.split(".")
+    spec_class = path.pop()
+    module = ".".join(path)
+    module = import_module(module)
+    options = list(filter(lambda c: c == spec_class, module.__dir__()))
+    candidate = getattr(module, options[0]) if len(options) > 0 else None
+    return candidate
 
 def with_lock(lock_name, cb):
     """

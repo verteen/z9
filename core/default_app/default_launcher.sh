@@ -26,6 +26,10 @@ restart)
         echo "Пeрезапуск uwsgi приложения {default}..."
         kill `cat /var/z9/apps/{default}/{default}.uwsgi.pid` > /dev/null
         ;;
+debug)
+        echo "Запуск uwsgi приложения appserv в debug режиме..."
+        /usr/local/bin/uwsgi /var/z9/apps/{default}/conf/{default}.uwsgi.ini
+        ;;
 help)
         echo "Используйте (start|stop|restart|help)."
         ;;
