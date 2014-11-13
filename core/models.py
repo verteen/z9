@@ -97,7 +97,7 @@ class Database(object):
             self.register_module(path)
 
     def init_pool(self, c: int):
-        self.pool = Pool(self.adapter, self.map.get(c), min_connections=2)
+        self.pool = Pool(self.adapter, self.map.get(c), min_connections=10)
 
     def register_mapper(self, mapper: SqlMapper):
         mapper.pool = self.pool
