@@ -157,13 +157,13 @@ class AuthentificationService(object):
         symbols = ["!", "#", "@", "*", "%", "^", "&", "/", "\\"]
         characters = ["a", "b", "d", "e", "f", "g", "h", "j", "k", "m", "n",
                       "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" ]
-        digit = str(random.choice(digits))
-        symbol = random.choice(symbols)
+        digit1 = str(random.choice(digits))
+        digit2 = str(random.choice(digits))
         upper_char = random.choice(characters).upper()
         random.shuffle(characters)
         random_start = random.choice([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])
         random_end = random_start + 5
         chars = characters[random_start:random_end]
-        l = [digit, symbol, upper_char] + chars
+        l = [digit1, digit2, upper_char] + chars
         random.shuffle(l)
         return "".join(l)
