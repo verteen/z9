@@ -91,13 +91,16 @@ class Database(object):
         self.map[Contours.UNITTESTS] = connection_tuples_map.get(Contours.UNITTESTS)
 
         self.pool = None
+        self.contour = None
         self.init_pool(Contours.UNITTESTS)
         self.mappers = []
         for path in mappers_modules_paths:
             self.register_module(path)
 
     def init_pool(self, c: int):
-        self.pool = Pool(self.adapter, self.map.get(c), min_connections=10)
+        if self.contour != c:
+            self.pool = Pool(self.adapter, self.map.get(c), min_connections=10)
+            self.contour = c
 
     def register_mapper(self, mapper: SqlMapper):
         mapper.pool = self.pool
