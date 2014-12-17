@@ -1,3 +1,4 @@
+import os
 import re
 import unittest
 from mapex import Pool, SqlMapper, EntityModel, EmbeddedObject
@@ -92,7 +93,13 @@ class Database(object):
 
         self.pool = None
         self.contour = None
-        self.init_pool(Contours.UNITTESTS)
+
+        contour_id = Contours.UNITTESTS
+        if os.path.isfile("contour"):
+            with open("contour") as f:
+                contour_id = int(f.readline())
+
+        self.init_pool(contour_id)
         self.mappers = []
         for path in mappers_modules_paths:
             self.register_module(path)
