@@ -18,7 +18,11 @@ class Application(EnviApplication):
         super().__init__()
         self._databases = []
         self._contour = None
-        self.contour = Contours.UNITTESTS
+        contour_id = Contours.UNITTESTS
+        if os.path.isfile("contour"):
+            with open("contour") as f:
+                contour_id = int(f.readline())
+        self.contour = contour_id
 
     def database(self, d):
         d.switch(self.contour)
@@ -94,12 +98,7 @@ class Database(object):
         self.pool = None
         self.contour = None
 
-        contour_id = Contours.UNITTESTS
-        if os.path.isfile("contour"):
-            with open("contour") as f:
-                contour_id = int(f.readline())
-
-        self.init_pool(contour_id)
+        self.init_pool(Contours.UNITTESTS)
         self.mappers = []
         for path in mappers_modules_paths:
             self.register_module(path)
