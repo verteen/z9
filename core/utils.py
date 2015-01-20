@@ -171,15 +171,10 @@ class FunctionalTestCase(unittest.TestCase):
         @param response: Тело ответа
         """
         force_class_name = str(excClass).replace("<class '", "").replace("'>", "")
-        self.assertResponseEqual(
-            {
-                "error": {
-                    "type": excClass.name() if issubclass(excClass, CommonException) else force_class_name,
-                    "message": custom_message if custom_message else excClass.message,
-                    "data": {}
-                }
-            },
-            response
+        response = json.loads(response.decode())
+        self.assertEqual(
+            excClass.name() if issubclass(excClass, CommonException) else force_class_name,
+            response.get("error", {}).get("type", response)
         )
 
     # noinspection PyPep8Naming
