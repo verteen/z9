@@ -1,0 +1,3 @@
+uwsgi
+mysql-connector-python
+webtest
