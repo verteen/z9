@@ -1,3 +1,4 @@
 uwsgi
 mysql-connector-python
 webtest
+pyodbc

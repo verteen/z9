@@ -15,7 +15,7 @@ fi
 source /var/z9/virtualenv/bin/activate
 
 ### Python packages
-pip install --allow-all-external -qr $( dirname `readlink -e "$0"` )/../core/default_app/requirements.txt
+pip install --allow-all-external --allow-unverified pyodbc -qr $( dirname `readlink -e "$0"` )/../core/default_app/requirements.txt
 
 PACKAGES="/var/z9/virtualenv/lib/python3.4/site-packages"
 cd $PACKAGES
