@@ -22,7 +22,9 @@ def md5(string):
     :param string: Строка для кодирования
     :return: Результат хэширования
     """
-    return hashlib.md5(str(string).encode()).hexdigest()
+    if not isinstance(string, bytes):
+        string = str(string).encode()
+    return hashlib.md5(string).hexdigest()
 
 
 def partition(predicate, iterable):
