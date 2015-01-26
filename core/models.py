@@ -87,7 +87,7 @@ class DbClients(object):
 
 
 class Database(object):
-    def __init__(self, adapter, mappers_modules_paths: list, connection_tuples_map: dict):
+    def __init__(self, adapter, mappers_modules_paths: list, connection_tuples_map: dict, pool_size=10):
         self.adapter = adapter
         # noinspection PyDictCreation
         self.map = {}
@@ -97,6 +97,7 @@ class Database(object):
 
         self.pool = None
         self.contour = None
+        self._pool_size = pool_size
 
         self.init_pool(Contours.UNITTESTS)
         self.mappers = []
@@ -105,7 +106,7 @@ class Database(object):
 
     def init_pool(self, c: int):
         if self.contour != c:
-            self.pool = Pool(self.adapter, self.map.get(c), min_connections=10)
+            self.pool = Pool(self.adapter, self.map.get(c), min_connections=self._pool_size)
             self.contour = c
 
     def register_mapper(self, mapper: SqlMapper):
