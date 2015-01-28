@@ -8,7 +8,22 @@ from suit.Suit import Suit, TemplateNotFound
 from inspect import isabstract, isclass
 
 from z9.core.utils import get_module_members
+from enum import Enum
+
 from z9.core.exceptions import InvalidPhoneNumber
+
+
+class Contours(Enum):
+    PRODUCTION = 9
+    BETA = 5
+    UNITTESTS = 0
+
+
+class DbClients(object):
+    MYSQL = MySqlClient
+    PGSQL = PgSqlClient
+    MSSQL = MsSqlClient
+    MONGO = MongoClient
 
 
 class Application(EnviApplication):
@@ -22,7 +37,7 @@ class Application(EnviApplication):
         if os.path.isfile("contour"):
             with open("contour") as f:
                 contour_id = int(f.readline())
-        self.contour = contour_id
+        self.contour = Contours(contour_id)
 
     def database(self, d):
         d.switch(self.contour)
@@ -33,7 +48,7 @@ class Application(EnviApplication):
         return self._contour
 
     @contour.setter
-    def contour(self, c: int):
+    def contour(self, c: Contours):
         self._contour = c
         for db in self._databases:
             db.switch(c)
@@ -73,19 +88,6 @@ class Application(EnviApplication):
             return str(result)
 
 
-class Contours(object):
-    PRODUCTION = 9
-    BETA = 5
-    UNITTESTS = 0
-
-
-class DbClients(object):
-    MYSQL = MySqlClient
-    PGSQL = PgSqlClient
-    MSSQL = MsSqlClient
-    MONGO = MongoClient
-
-
 class Database(object):
     def __init__(self, adapter, mappers_modules_paths: list, connection_tuples_map: dict, min_connections=10):
         self.adapter = adapter
@@ -104,7 +106,7 @@ class Database(object):
         for path in mappers_modules_paths:
             self.register_module(path)
 
-    def init_pool(self, c: int):
+    def init_pool(self, c: Contours):
         if self.contour != c:
             self.pool = Pool(self.adapter, self.map.get(c), min_connections=self._min_connections)
             self.contour = c
@@ -119,7 +121,7 @@ class Database(object):
         ):
             self.register_mapper(mapper)
 
-    def switch(self, c: int):
+    def switch(self, c: Contours):
         self.init_pool(c)
         for mapper in self.mappers:
             mapper.pool = self.pool
