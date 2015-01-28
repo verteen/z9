@@ -1,15 +1,14 @@
 import os
 import re
 import unittest
-from mapex import Pool, SqlMapper, EntityModel, EmbeddedObject
+from mapex import Pool, SqlMapper, EntityModel, EmbeddedObject, CollectionModel
 from mapex import MySqlClient, MsSqlClient, PgSqlClient, MongoClient
 from envi import Application as EnviApplication, ControllerMethodResponseWithTemplate
 from suit.Suit import Suit, TemplateNotFound
 from inspect import isabstract, isclass
-
-from z9.core.utils import get_module_members
 from enum import Enum
 
+from z9.core.utils import get_module_members, apply_migrations
 from z9.core.exceptions import InvalidPhoneNumber
 
 
@@ -89,8 +88,11 @@ class Application(EnviApplication):
 
 
 class Database(object):
-    def __init__(self, adapter, mappers_modules_paths: list, connection_tuples_map: dict, min_connections=10):
+    def __init__(self, adapter, mappers_modules_paths: list, connection_tuples_map: dict,
+                 min_connections=10,
+                 migrations_path=None):
         self.adapter = adapter
+        self._migrations_path = migrations_path
         # noinspection PyDictCreation
         self.map = {}
         self.map[Contours.PRODUCTION] = connection_tuples_map.get(Contours.PRODUCTION)
@@ -126,6 +128,9 @@ class Database(object):
         for mapper in self.mappers:
             mapper.pool = self.pool
 
+    def migrate(self, verbose=True):
+        if self._migrations_path:
+            apply_migrations(self._migrations_path, self.pool, verbose=verbose)
 
 class EntityModelTest(unittest.TestCase):
     model_for_test = EntityModel
@@ -170,3 +175,34 @@ class Phone(EmbeddedObject):
         """
         if len(self._digits) < 10 and self._default_if_error is False:
             raise InvalidPhoneNumber(self._normalize())
+
+
+class MigrationsMapper(SqlMapper):
+    def up(cls):
+        cls.pool.db.execute_raw(
+            """
+            CREATE TABLE IF NOT EXISTS `Migrations` (
+              `Name` varchar(255) NOT NULL,
+              `Created` datetime NOT NULL,
+              PRIMARY KEY (`Name`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+            """
+        )
+
+    def bind(self):
+        self.set_new_item(Migration)
+        self.set_new_collection(Migrations)
+        self.set_collection_name("Migrations")
+        self.set_map([
+            self.str("name", "Name"),
+            self.datetime("created", "Created"),
+        ])
+
+
+class Migration(EntityModel):
+    mapper = MigrationsMapper
+
+
+class Migrations(CollectionModel):
+    mapper = MigrationsMapper
+

@@ -6,13 +6,14 @@ import hashlib
 import unittest
 import webtest
 import json
+from datetime import datetime
 from itertools import filterfalse, chain
 from importlib import import_module
 from inspect import getmembers
 from fcntl import flock, LOCK_EX, LOCK_NB
 
 from z9.core.exceptions import CommonException
-
+from mapex import Pool
 
 root_path = "%s/../" % os.path.dirname(os.path.abspath(__file__))
 
@@ -123,6 +124,57 @@ def with_lock(lock_name, cb):
         return cb()
 
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def apply_migrations(migrations_path, pool: Pool, verbose=True):
+    from z9.core.models import Migration
+
+    Migration.mapper.pool = pool
+
+    if not os.path.exists(migrations_path):
+        if verbose:
+            print("{color1}Migrations path '{path}' don't exists{end}".format(
+                color1=bcolors.WARNING,
+                end=bcolors.ENDC,
+                path=migrations_path
+            ))
+        return
+
+    for file in sorted(os.listdir(migrations_path)):
+        migration = Migration({'name': file, 'created': datetime.today()})
+
+        if not migration.get_new_collection().get_item({"name": migration.name}):
+            if verbose:
+                print("{color1} APPLY{end}: {color2}{migration}{end}".format(
+                    color1=bcolors.OKGREEN,
+                    color2=bcolors.WARNING + bcolors.BOLD,
+                    end=bcolors.ENDC,
+                    migration=file
+                ))
+
+            with open("%s/%s" % (migrations_path, file)) as f:
+                migration.mapper.pool.db.execute_raw(f.read())
+
+            migration.save()
+        else:
+            if verbose:
+                print("{color1}IGNORE{end}: {color2}{migration}{end}".format(
+                    color1=bcolors.OKBLUE,
+                    color2=bcolors.WARNING,
+                    end=bcolors.ENDC,
+                    migration=file
+                ))
+
+
 class FunctionalTestCase(unittest.TestCase):
     """ Класс для создания функциональных тестов """
     application=None
@@ -196,3 +248,4 @@ class FunctionalTestCase(unittest.TestCase):
         self.assertIn(cookie, cookies)
         if value:
             self.assertEqual(value, cookies.get(cookie))
+
