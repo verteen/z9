@@ -13,12 +13,12 @@ except NoTableFound:
 if __name__ == "__main__":
     cli = OptionParser()
     cli.add_option(
-        "-q",
-        "--quiet",
-        action="store_false",
-        default=True,
-        dest="verbose",
-        help="don't print to stdout"
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        dest="force",
+        help="apply migrations without confirmation"
     )
     cli.add_option(
         "-c",
@@ -33,21 +33,25 @@ if __name__ == "__main__":
     application.contour = Contours[options.contour]
 
     if not len(application._databases):
-        if options.verbose:
-            print("{color}There are no databases{end}".format(color=bcolors.WARNING, end=bcolors.ENDC))
+        print("{color}There are no databases{end}".format(color=bcolors.WARNING, end=bcolors.ENDC))
         exit()
 
     # noinspection PyProtectedMember
     for db in application._databases:
-        if options.verbose:
-            print("Contour: %s" % options.contour)
-            print("DSN: %s" % str(db.pool._dsn))
+        print("Contour: %s" % options.contour)
+        print("DSN: %s" % str(db.pool._dsn))
 
-            confirmation = input('{color}continue migration?{end} {color2}(y or N){end}'.format(color=bcolors.FAIL, color2=bcolors.OKGREEN, end=bcolors.ENDC))
-            if strtobool(confirmation if len(confirmation) else 'N'):
-                db.migrate(verbose=options.verbose)
-            else:
-                print("{color}  .. migration canceled{end}".format(color=bcolors.FAIL, end=bcolors.ENDC))
-            print("\n")
+        if options.force:
+            confirmation = 'Y'
         else:
-            db.migrate(verbose=options.verbose)
+            confirmation = input('{color}continue migration?{end} {color2}(Y or n){end}'.format(
+                color=bcolors.WARNING,
+                color2=bcolors.OKGREEN,
+                end=bcolors.ENDC)
+            ) or 'Y'
+
+        if strtobool(confirmation):
+            db.migrate()
+        else:
+            print("{color}  .. migration canceled{end}".format(color=bcolors.FAIL, end=bcolors.ENDC))
+        print("\n")

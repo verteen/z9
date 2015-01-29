@@ -128,9 +128,8 @@ class Database(object):
         for mapper in self.mappers:
             mapper.pool = self.pool
 
-    def migrate(self, verbose=True):
-        if self._migrations_path:
-            apply_migrations(self._migrations_path, self.pool, verbose=verbose)
+    def migrate(self):
+        apply_migrations(self._migrations_path, self.pool)
 
 class EntityModelTest(unittest.TestCase):
     model_for_test = EntityModel
