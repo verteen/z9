@@ -1,0 +1,9 @@
+/var/log/*.uwsgi.log {
+    rotate 24
+    weekly
+    compress
+    delaycompress
+    notifempty
+    missingok
+    copytruncate
+}

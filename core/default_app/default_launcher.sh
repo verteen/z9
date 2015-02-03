@@ -11,8 +11,10 @@ source /var/z9/virtualenv/bin/activate
 
 case $1 in
 start)
+        echo "Перекомпиляция шаблонов"
+        su -s /bin/bash -c 'source /var/z9/virtualenv/bin/activate && suitup /var/z9/apps/{default}/views/' www-data
         echo "Запуск uwsgi приложения {default}..."
-        uwsgi /var/z9/apps/{default}/conf/{default}.uwsgi.ini 2> /dev/null > /dev/null &
+        uwsgi /var/z9/apps/{default}/conf/{default}.uwsgi.ini 2> /var/log/{default}.uwsgi.log > /var/log/{default}.uwsgi.log &
         ;;
 stop)
         echo "Завершение работы uwsgi приложения {default}..."

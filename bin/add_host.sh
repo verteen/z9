@@ -85,6 +85,9 @@ sudo ln -s $APP_DIR/views/__css__/all.css $APP_DIR/static/css/all.css
 sudo ln -sf $APP_DIR/views/__js__/all.js $APP_DIR/static/js/all.js
 sudo ln -sf /var/z9/virtualenv/lib/python3.4/site-packages/suit/Suit.js /var/z9/apps/$1/static/js/suit.js
 
+# setup uwsgi logrotate
+sudo cp -f $APP_DIR/conf/default.logrotate /etc/logrotate.d/uwsgi
+
 # restarting
 sudo /etc/init.d/$1-app start
 sudo /etc/init.d/nginx restart
