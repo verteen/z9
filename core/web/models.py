@@ -29,13 +29,14 @@ class MenuItem(object):
         self.sub_menu.append(items)
         self.url_map.update(self.sub_menu.items_map)
 
-    def get_data(self) -> dict:
+    def get_data(self, url=None) -> dict:
         """ Возвращает описание пункта меню в виде словаря """
         return {
             "url": self.url,
             "alias": self.alias,
             "css_class": self.css_class,
-            "childs": self.sub_menu.get_full()
+            "childs": self.sub_menu.get_full(),
+            "active": self.url == url
         }
 
     @property
@@ -64,9 +65,9 @@ class Menu(object):
             self.items_map.update(item.url_map)
             self.items_map.update(item.sub_menu.items_map)
 
-    def get_full(self) -> list:
+    def get_full(self, url=None) -> list:
         """ Возвращает структуру меню в виде списка словарей """
-        return [item.get_data() for item in self.items]
+        return [item.get_data(url) for item in self.items]
 
     def get_sub_menu(self, url: str):
         """
@@ -99,8 +100,8 @@ class Menu(object):
         :return:
         """
         return {
-            "main_menu": self.get_full(),
-            "sub_menu": self.get_sub_menu(url).get_full(),
+            "main_menu": self.get_full(url),
+            "sub_menu": self.get_sub_menu(url).get_full(url),
             "breadcrumbs": self.get_breadcrumbs(url)
         }
 

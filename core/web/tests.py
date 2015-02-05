@@ -26,16 +26,16 @@ class MenuTest(TestCase):
         """ Объект меню возвращает все меню в виде словаря """
 
         expected = [
-            {"url": "/contracts/", "alias": "Система ввода договоров", "css_class": "", "childs": [
-                {"url": "/contracts/new/", "alias": "Новый договор", "css_class": "bold italic", "childs": []},
-                {"url": "/contracts/show/", "alias": "Список договоров", "css_class": "", "childs": []}
+            {"url": "/contracts/", "alias": "Система ввода договоров", "css_class": "", "active": False, "childs": [
+                {"url": "/contracts/new/", "alias": "Новый договор", "css_class": "bold italic", "childs": [], "active": False},
+                {"url": "/contracts/show/", "alias": "Список договоров", "css_class": "", "childs": [], "active": False}
             ]},
-            {"url": "/profile/", "alias": "Профиль", "css_class": "", "childs": [
-                {"url": "/profile/show/", "alias": "Личные данные", "css_class": "", "childs": []},
-                {"url": "/profile/password/", "alias": "Сменить пароль", "css_class": "", "childs": []},
-                {"url": "/profile/avatar/", "alias": "Установить аватар", "css_class": "", "childs": []}
+            {"url": "/profile/", "alias": "Профиль", "css_class": "", "active": False, "childs": [
+                {"url": "/profile/show/", "alias": "Личные данные", "css_class": "", "childs": [], "active": False},
+                {"url": "/profile/password/", "alias": "Сменить пароль", "css_class": "", "childs": [], "active": False},
+                {"url": "/profile/avatar/", "alias": "Установить аватар", "css_class": "", "childs": [], "active": False}
             ]},
-            {"url": "/exit/", "alias": "Выход", "css_class": "", "childs": []}
+            {"url": "/exit/", "alias": "Выход", "css_class": "", "childs": [], "active": False}
         ]
 
         self.assertCountEqual(expected, self.menu.get_full())
@@ -44,11 +44,21 @@ class MenuTest(TestCase):
         """ Объект меню может вернуть подменю по переданному URL """
 
         expected = [
-            {"url": "/profile/show/", "alias": "Личные данные", "css_class": "", "childs": []},
-            {"url": "/profile/password/", "alias": "Сменить пароль", "css_class": "", "childs": []},
-            {"url": "/profile/avatar/", "alias": "Установить аватар", "css_class": "", "childs": []}
+            {"url": "/profile/show/", "alias": "Личные данные", "css_class": "", "childs": [], "active": False},
+            {"url": "/profile/password/", "alias": "Сменить пароль", "css_class": "", "childs": [], "active": False},
+            {"url": "/profile/avatar/", "alias": "Установить аватар", "css_class": "", "childs": [], "active": False}
         ]
         self.assertCountEqual(expected, self.menu.get_sub_menu("/profile/").get_full())
+
+    def test_active_menu(self):
+        """ Объект меню знает активный он или нет """
+        expected = [
+            {"url": "/profile/show/", "alias": "Личные данные", "css_class": "", "childs": [], "active": True},
+            {"url": "/profile/password/", "alias": "Сменить пароль", "css_class": "", "childs": [], "active": False},
+            {"url": "/profile/avatar/", "alias": "Установить аватар", "css_class": "", "childs": [], "active": False}
+        ]
+        self.assertCountEqual(expected, self.menu.get_sub_menu("/profile/").get_full(url='/profile/show/'))
+
 
     def test_get_breadcrumbs(self):
         """ Объект меню может вернуть хлебные крошки по переданному URL """
