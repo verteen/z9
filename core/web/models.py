@@ -1,7 +1,7 @@
 """ Модели для веб разработки """
 from mapex import CollectionModel
 from collections import OrderedDict
-
+from envi import Request
 
 class MenuItem(object):
     """
@@ -108,56 +108,43 @@ class Menu(object):
 
 class TableView(CollectionModel):
     """ Класс для представления коллекции в виде структуры данных пригодной для использования в шаблонизаторе """
-    def __init__(self, *boundaries):
-        super().__init__(*boundaries)
-        self.template = ""
-        self.caption = ""
-        self.header = []
-        self.properties = []
-        self._rows = None
-        self.boundaries = {}
+    template = ""
+    header = []
+    properties = []
+    boundaries = {}
+    params = {}
+
+    def __init__(self, request: Request, *boundaries, **kwargs):
+        super().__init__(*boundaries, **kwargs)
+        self._orders = {}
+        self.request = request
+        for prop in self.properties:
+            self._orders.update({'{prop}-asc'.format(prop=prop): (prop, 'ASC')})
+            self._orders.update({'{prop}-desc'.format(prop=prop): (prop, 'DESC')})
+
         for bounds in boundaries:
             self.boundaries.update(bounds)
-        self.primary_extracter = lambda rm: rm
+
+    @property
+    def sort(self):
+        """ Порядок сортировки каким его видит пользователь (name-asc, name-desc и т.д.) """
+        return self.request.get('sort', None)\
+            if self.request.get('sort', None) in self._orders\
+            else None
 
     @property
     def rows(self):
         """ Возвращает строки таблицы
         :return:
         """
-        if self._rows is None:
-            self._rows = {
-                self.primary_extracter(it): self.ordered({
-                    p: str(it.fetch(p)) for p in self.properties
-                }, self.properties) for it in self.get_items(self.boundaries)
-            }
-        return self._rows
+        params = self.params.copy()
+        if self.sort:
+            params.update({'order': self._orders.get(self.sort)})
 
-    @staticmethod
-    def ordered(unordered: dict, order_keys: list) -> dict:
-        """ Возвращает копию словаря, отсортированную в соответствии со списком ключей
-        :param unordered: Словарь для сортировки
-        :param order_keys: Список ключей
-        :return: Отсортированный словарь
-        """
-        ordered = OrderedDict()
-        for key in order_keys:
-            ordered[key.replace(".", "_")] = unordered.get(key)
-        return ordered
-
-    @rows.setter
-    def rows(self, rows: dict):
-        """ Заполняет объект таблицы указанными строками
-        :param rows: Строки таблицы в виде словаря {id_строки: {"поле": "значение"}}
-        """
-        self._rows = rows
-
-    def set_caption(self, caption: str):
-        """ Устанавливает заголовок таблицы
-        :param caption: Заголовок для таблицы
-        :return:
-        """
-        self.caption = caption
+        rows = OrderedDict()
+        for item in self.get_items(self.boundaries, params=params):
+            rows[item.primary.value] = item.stringify(self.properties)
+        return rows
 
     def set_sub_boundaries(self, sub_boundaries: dict):
         """ Устанавливаеь дополнительные ограничения на таблицу (Что-то вроде фильтра или поиска по таблице)
@@ -167,4 +154,4 @@ class TableView(CollectionModel):
 
     def represent(self):
         """ Возвращает коллекцию в виде пригодном для шаблонизатора """
-        return {"template": self.template, "caption": self.caption, "header": self.header, "rows": self.rows}
+        return {"template": self.template, "header": self.header, "rows": self.rows, "sort": self.sort}
