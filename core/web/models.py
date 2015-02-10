@@ -2,6 +2,8 @@
 from mapex import CollectionModel
 from collections import OrderedDict
 from envi import Request
+from z9.core.exceptions import CommonException
+
 
 class MenuItem(object):
     """
@@ -114,10 +116,12 @@ class TableView(CollectionModel):
     boundaries = {}
     params = {}
 
-    def __init__(self, request: Request, *boundaries, **kwargs):
+    record_exists_exception = CommonException("Row exists already")
+    record_not_found_exception = CommonException("Row not found")
+
+    def __init__(self, *boundaries, **kwargs):
         super().__init__(*boundaries, **kwargs)
         self._orders = {}
-        self.request = request
         for prop in self.properties:
             self._orders.update({'{prop}-asc'.format(prop=prop): (prop, 'ASC')})
             self._orders.update({'{prop}-desc'.format(prop=prop): (prop, 'DESC')})
@@ -125,21 +129,13 @@ class TableView(CollectionModel):
         for bounds in boundaries:
             self.boundaries.update(bounds)
 
-    @property
-    def sort(self):
-        """ Порядок сортировки каким его видит пользователь (name-asc, name-desc и т.д.) """
-        return self.request.get('sort', None)\
-            if self.request.get('sort', None) in self._orders\
-            else None
-
-    @property
-    def rows(self):
+    def rows(self, sort):
         """ Возвращает строки таблицы
         :return:
         """
         params = self.params.copy()
-        if self.sort:
-            params.update({'order': self._orders.get(self.sort)})
+        if sort:
+            params.update({'order': self._orders.get(sort)})
 
         rows = OrderedDict()
         for item in self.get_items(self.boundaries, params=params):
@@ -152,6 +148,38 @@ class TableView(CollectionModel):
         """
         self.boundaries.update(sub_boundaries)
 
-    def represent(self):
+    def represent(self, request: Request=None):
         """ Возвращает коллекцию в виде пригодном для шаблонизатора """
-        return {"template": self.template, "header": self.header, "rows": self.rows, "sort": self.sort}
+
+        sort = request.get('sort', None)\
+            if request.get('sort', None) in self._orders\
+            else None
+
+        return {"template": self.template, "header": self.header, "rows": self.rows(sort), "sort": sort}
+
+    def create(self, request: Request):
+        """ Создание новой записи если её ещё не существует """
+        data = dict(request.items())
+
+        model = self.get_new_item(data)
+        if model.mapper.primary.exists() and self.count(model.primary.to_dict()):
+            raise self.record_exists_exception
+        model.save()
+
+    # noinspection PyMethodOverriding
+    def update(self, request: Request):
+        """ Обновление записи если она существует """
+        data = dict(request.items())
+        data_model = self.get_new_item(data)
+        model = self.get_item(data_model.primary.to_dict())
+        if model is None:
+            raise self.record_not_found_exception
+        model.load_from_array(data).save()
+
+    # noinspection PyMethodOverriding
+    def delete(self, request: Request):
+        """ Удаление нескольких записей """
+        pkeys = request.get(self.mapper.primary.name())
+        if not isinstance(pkeys, list):
+            pkeys = [pkeys]
+        super().delete({self.mapper.primary.name(): ("in", pkeys)})
