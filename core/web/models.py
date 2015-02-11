@@ -1,5 +1,5 @@
 """ Модели для веб разработки """
-from mapex import CollectionModel
+from mapex import EntityModel, CollectionModel, EmbeddedObject
 from collections import OrderedDict
 from envi import Request
 from z9.core.exceptions import CommonException
@@ -111,10 +111,10 @@ class Menu(object):
 class TableView(CollectionModel):
     """ Класс для представления коллекции в виде структуры данных пригодной для использования в шаблонизаторе """
     template = ""
-    header = []
-    properties = []
-    boundaries = {}
-    params = {}
+    header = None
+    properties = None
+    boundaries = None
+    params = None
 
     record_exists_exception = CommonException("Row exists already")
     record_not_found_exception = CommonException("Row not found")
@@ -122,6 +122,8 @@ class TableView(CollectionModel):
     def __init__(self, *boundaries, **kwargs):
         super().__init__(*boundaries, **kwargs)
         self._orders = {}
+        self.boundaries = {}
+        self.params = {}
         for prop in self.properties:
             self._orders.update({'{prop}-asc'.format(prop=prop): (prop, 'ASC')})
             self._orders.update({'{prop}-desc'.format(prop=prop): (prop, 'DESC')})
@@ -169,17 +171,32 @@ class TableView(CollectionModel):
     # noinspection PyMethodOverriding
     def update(self, request: Request):
         """ Обновление записи если она существует """
-        data = dict(request.items())
-        data_model = self.get_new_item(data)
-        model = self.get_item(data_model.primary.to_dict())
+        model = self.get_item({self.mapper.primary.name(): request.get("row_id")})
         if model is None:
             raise self.record_not_found_exception
-        model.load_from_array(data).save()
+        model.load_from_array(dict(request.items())).save()
 
     # noinspection PyMethodOverriding
     def delete(self, request: Request):
         """ Удаление нескольких записей """
-        pkeys = request.get(self.mapper.primary.name())
+        pkeys = request.get("row_id")
         if not isinstance(pkeys, list):
             pkeys = [pkeys]
         super().delete({self.mapper.primary.name(): ("in", pkeys)})
+
+    # noinspection PyMethodOverriding
+    def fetch_one(self, request: Request):
+        model = self.get_item({self.mapper.primary.name(): request.get("row_id")})
+        if not model:
+            raise self.record_not_found_exception
+
+        data = model.stringify(self.mapper.get_properties())
+        for p in self.mapper.get_properties():
+            attr = model.__getattribute__(p)
+            if isinstance(attr, EmbeddedObject):
+                data[p] = attr.get_value()
+            if isinstance(attr, EntityModel):
+                data[p] = attr.primary.get_value(deep=True)
+
+        data["row_id"] = model.primary.get_value(deep=True)
+        return data
