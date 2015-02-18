@@ -9,7 +9,7 @@ from inspect import isabstract, isclass
 from enum import Enum
 
 from z9.core.utils import get_module_members, apply_migrations
-from z9.core.exceptions import InvalidPhoneNumber
+from z9.core.exceptions import InvalidPhoneNumber, CommonException
 
 
 class Contours(Enum):
@@ -27,6 +27,7 @@ class DbClients(object):
 
 class Application(EnviApplication):
     """ Стандартное приложение z9 """
+    ignored_exceptions = [CommonException]
 
     def __init__(self):
         super().__init__()
