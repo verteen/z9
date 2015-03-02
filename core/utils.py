@@ -247,3 +247,20 @@ class FunctionalTestCase(unittest.TestCase):
         if value:
             self.assertEqual(value, cookies.get(cookie))
 
+
+def pretty_print(something):
+    from prettytable import PrettyTable
+    header = []
+    values = []
+
+    if isinstance(something, dict):
+        header = something.keys()
+        values = something.values()
+    elif isinstance(something, list):
+        values = something
+    elif isinstance(something, tuple):
+        values = list(something)
+
+    table = PrettyTable(header)
+    table.add_row([str(val) for val in values])
+    print(table)
