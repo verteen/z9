@@ -12,8 +12,10 @@ class AuthController(Controller):
     auth_service = AuthentificationService
     root = "/"
 
+    is_private = True
+
     @classmethod
-    def user_initialization_hook_static(cls, app: Application, request: Request):
+    def user_initialization_hook_static(cls, app: Application, request: Request, is_public=None):
         """
         Стандартный алгоритм аутентификации
         :param app: Экземпляр приложения
@@ -30,7 +32,10 @@ class AuthController(Controller):
         try:
             return cls.auth_service().authentificate_by_request(request)
         except (NoDataForAuth, IncorrectToken):
-            app.redirect("{}auth/login/".format(cls.root))
+            if not is_public:
+                app.redirect("{}auth/login/".format(cls.root))
+            else:
+                return None
 
     @classmethod
     def user_initialization_hook(cls, request: Request):
