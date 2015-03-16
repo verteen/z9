@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from envi import Application, Request, Controller, template
 
-from z9.core.auth.models import AuthentificationService
+from z9.core.auth.models import AuthentificationService, Account
 from z9.core.auth.exceptions import NoDataForAuth, IncorrectToken
 
 
@@ -12,10 +12,8 @@ class AuthController(Controller):
     auth_service = AuthentificationService
     root = "/"
 
-    is_private = True
-
     @classmethod
-    def user_initialization_hook_static(cls, app: Application, request: Request, is_public=None):
+    def user_initialization_hook_static(cls, app: Application, request: Request, auto_register=None):
         """
         Стандартный алгоритм аутентификации
         :param app: Экземпляр приложения
@@ -32,10 +30,10 @@ class AuthController(Controller):
         try:
             return cls.auth_service().authentificate_by_request(request)
         except (NoDataForAuth, IncorrectToken):
-            if not is_public:
-                app.redirect("{}auth/login/".format(cls.root))
+            if auto_register:
+                return cls.new_default_account(request)
             else:
-                return None
+                app.redirect("{}auth/login/".format(cls.root))
 
     @classmethod
     def user_initialization_hook(cls, request: Request):
@@ -52,6 +50,12 @@ class AuthController(Controller):
             return None
         return cls.auth_service().authentificate_by_request(request)
 
+    @classmethod
+    def new_default_account(cls, request: Request) -> Account:
+        account = Account({"login": AuthentificationService.gen_password(), "password": AuthentificationService.gen_password()})
+        request.set("token", account.set_new_token())
+        cls.auth(request)
+        return account
 
     @staticmethod
     @template("views.login")
