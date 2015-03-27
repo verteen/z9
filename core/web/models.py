@@ -3,6 +3,7 @@ from mapex import EntityModel, CollectionModel, EmbeddedObject
 from collections import OrderedDict
 from envi import Request
 from z9.core.exceptions import CommonException
+from math import ceil
 
 
 class MenuItem(object):
@@ -108,9 +109,95 @@ class Menu(object):
         }
 
 
+class Pager(object):
+    @property
+    def limit(self):
+        return self._limit
+
+    @property
+    def offset(self):
+        return (self._page - 1) * self._limit
+
+    def range(self, a, b):
+        return list(range(a, b + 1))
+
+    def __init__(self, collection: CollectionModel, request: Request):
+        self._page = None
+        self._pages = []
+        self._pages_count = None
+
+        self._limit = None
+        self._limits = []
+
+        items_count = collection.count(collection.boundaries)
+
+        # Допустимые значения для лимита
+        for limit in [10, 30, 100]:
+            if items_count > limit:
+                self._limits.append(limit)
+
+        try:
+            self._limit = int(request.get("limit", 10))
+            if self._limit not in self._limits:
+                self._limit = 10
+        except ValueError:
+            self._limit = 10
+
+        try:
+            self._page = int(request.get("page", 1))
+        except ValueError:
+            self._page = 1
+
+        self._pages_count = ceil(items_count / self._limit)
+        self._page = max(self._page, 1)
+        self._page = min(self._page, self._pages_count)
+
+        self.pages_factory()
+
+    def pages_factory(self):
+        if self._pages_count > 10:
+            a = max(self._page - 2, 1)
+            b = max(self._page + 3, 6)
+            c = self._pages_count - 4
+            d = self._pages_count + 1
+
+            if d - a > 10:
+                self._pages = list(range(a, b)) + ['...'] + list(range(c, d))
+            else:
+                self._pages = ['...'] + list(range(d - 10, d))
+        else:
+            self._pages = list(range(1, self._pages_count + 1))
+
+    def represent(self):
+        return {
+            "value": self._page,
+            "values": self._pages,
+            "max_value": self._pages_count,
+            "limits": {
+                "value": self._limit,
+                "values": self._limits,
+            }
+        }
+
+class LinearPager(Pager):
+    def pages_factory(self):
+        if self._pages_count <= 10:
+            self._pages = self.range(1, self._pages_count)
+        else:
+            if self._page <= 5:
+                self._pages = list(range(1, min(self._pages_count, 10))) + ['...']
+
+            if 5 < self._page <= self._pages_count - 5:
+                self._pages = ['...'] + self.range(max(self._page - 4, 1), min(self._page + 4, self._pages_count)) + ['...']
+
+            if self._page > self._pages_count - 5:
+                self._pages = ['...'] + self.range(max(self._pages_count - 8, 1), self._pages_count)
+
+
 class TableView(CollectionModel):
     """ Класс для представления коллекции в виде структуры данных пригодной для использования в шаблонизаторе """
     template = ""
+    title = None
     header = None
     properties = None
     boundaries = None
@@ -131,13 +218,16 @@ class TableView(CollectionModel):
         for bounds in boundaries:
             self.boundaries.update(bounds)
 
-    def rows(self, sort):
+    def rows(self, sort, skip=0, limit=None):
         """ Возвращает строки таблицы
         :return:
         """
         params = self.params.copy()
         if sort:
             params.update({'order': self._orders.get(sort)})
+
+        if limit and limit > 0:
+            params.update({"skip": skip, "limit": limit})
 
         rows = OrderedDict()
         for item in self.get_items(self.boundaries, params=params):
@@ -150,14 +240,31 @@ class TableView(CollectionModel):
         """
         self.boundaries.update(sub_boundaries)
 
-    def represent(self, request: Request=None):
+    def represent(self, request: Request=None,
+                  show_checkboxes=True,
+                  show_add_button=True,
+                  show_edit_button=True,
+                  show_delete_button=True
+    ):
         """ Возвращает коллекцию в виде пригодном для шаблонизатора """
 
         sort = request.get('sort', None)\
             if request.get('sort', None) in self._orders\
             else None
 
-        return {"template": self.template, "header": self.header, "rows": self.rows(sort), "sort": sort}
+        pager = LinearPager(self, request)
+        return {
+            "template": self.template,
+            "title": self.title,
+            "header": self.header,
+            "rows": self.rows(sort, pager.offset, pager.limit),
+            "sort": sort,
+            "pager": pager.represent(),
+            "show_checkboxes": show_checkboxes,
+            "show_add_button": show_add_button,
+            "show_edit_button": show_edit_button,
+            "show_delete_button": show_delete_button,
+        }
 
     def create(self, request: Request):
         """ Создание новой записи если её ещё не существует """
