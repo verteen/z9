@@ -202,6 +202,9 @@ class TableView(CollectionModel):
     properties = None
     boundaries = None
     params = None
+    sort = None
+    filter = None
+
 
     record_exists_exception = CommonException("Row exists already")
     record_not_found_exception = CommonException("Row not found")
@@ -253,10 +256,19 @@ class TableView(CollectionModel):
             else None
 
         pager = LinearPager(self, request)
+
+
+
         return {
             "template": self.template,
             "title": self.title,
-            "header": self.header,
+            "header": [{
+                "title": self.header[key],
+                "sort": {"asc": p + "-asc", "desc": p + "-desc"} if self.sort and (p in self.sort) else None
+            }
+                for key, p in enumerate(self.properties)
+
+            ],
             "rows": self.rows(sort, pager.offset, pager.limit),
             "sort": sort,
             "pager": pager.represent(),
