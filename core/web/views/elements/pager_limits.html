@@ -1,0 +1,22 @@
+<div class="btn-group ui-container data-container" data-template-name="elements.pager_limits">
+    <list for="v" in="table.pager.limits.values">
+        <if>
+            <condition><var>v</var> == <var>table.pager.limits.value</var></condition>
+            <true><a class="btn btn-default btn-sm active" data-limit="<var>v</var>"><var>v</var></a></true>
+            <false><a class="btn btn-default btn-sm" data-limit="<var>v</var>"><var>v</var></a></false>
+        </if>
+    </list>
+</div>
+
+<script>
+(function(internal){
+    internal.api.createListeners = function(){
+        internal.connect("a", "click", function(){
+            internal.events_controller.broadcast("LimitChanged", parseInt($(this).data("limit")));
+            return false;
+        });
+    };
+
+    internal.api.on = internal.events_controller.on;
+})
+</script>

@@ -1,41 +1,123 @@
+<div class="panel panel-default ui-container"  data-template-name="elements.table">
+    <if>
+        <condition><var filter="length">table.title</var> > 0</condition>
+        <true>
+            <div class="panel-heading">
+                <var>table.title</var>
+            </div>
+        </true>
+    </if>
+    <table class="table table-condensed table_view ">
+        <thead class="data-container">
+            <tr>
+                <if>
+                    <condition><var>table.show_checkboxes</var></condition>
+                    <true>
+                    <th><input class="select_all" type="checkbox" /></th>
+                    </true>
+                </if>
 
-<div class="table_action_buttons btn-toolbar">
-    &nbsp;<breakpoint name="buttons"></breakpoint>
-</div>
-<table class="table table-condensed table_view ui-container" data-template-name="elements.table">
-    <caption><var>table.caption</var></caption>
-    <if><condition><var filter="length">table.rows</var> > 0</condition><true>
-    <thead>
-        <tr>
-            <th><input class="select_all_checkbox" type="checkbox" /></th>
-            <list for="column_name" in="table.header">
-                <th><var>column_name</var></th>
-            </list>
-        </tr>
-    </thead>
-    <tbody>
-        <list for="id,properties" in="table.rows">
-            <tr class="entire_row">
-                <td><input class="row_checkbox" name="row_id" type="checkbox" value="<var>id</var>" /></td>
-                <list for="prop,val" in="properties">
-                    <td data-property="<var>prop</var>"><var>val</var></td>
+                <list for="column_name" in="table.header">
+                    <th><var>column_name</var></th>
                 </list>
+
+                <if>
+                    <condition><var>table.show_edit_button</var></condition>
+                    <true>
+                    <th></th>
+                    </true>
+                </if>
+
             </tr>
-        </list>
-    </tbody>
-    </true></if>
-</table>
+        </thead>
+        <tbody class="data-container">
+            <if><condition><var filter="length">table.rows</var> > 0</condition>
+            <true>
+            <list for="id,properties" in="table.rows">
+                <tr class="entire_row">
+                    <if>
+                        <condition><var filter="bool">table.show_checkboxes</var></condition>
+                        <true>
+                        <td><input class="row_checkbox" name="row_id" type="checkbox" value="<var>id</var>" /></td>
+                        </true>
+                    </if>
+                    <list for="prop,val" in="properties">
+                        <td data-property="<var>prop</var>"><var d="">val</var></td>
+                    </list>
+                    <if>
+                        <condition><var>table.show_edit_button</var></condition>
+                        <true>
+                        <td>
+                            <div class="btn-toolbar pull-right">
+                                <a class="btn btn-default btn-sm btn-edit"><i class="fa fa-fw fa-edit"></i> Редактировать</a>
+                            </div>
+
+                        </td>
+                        </true>
+                    </if>
+
+                </tr>
+            </list>
+            </true>
+            <false><tr><td align="center" colspan="<expression><var filter="length">table.header</var>  + 1</expression>">Данных нет</td></tr></false>
+            </if>
+        </tbody>
+    </table>
+
+    <div class="panel-footer">
+        <div class="btn-toolbar">
+            <if>
+                <condition><var filter="bool">table.show_add_button</var></condition>
+                <true>
+                    <div class="btn-group">
+                        <a class="btn btn-default btn-sm btn-add"><i class="fa fa-fw fa-plus"></i> Добавить</a>
+                    </div>
+                </true>
+            </if>
+
+
+            <if>
+                <condition><var filter="length">table.pages</var> > 0</condition>
+                <true></true>
+            </if>
+
+            <breakpoint include="elements.pager"></breakpoint>
+            <breakpoint include="elements.pager_limits"></breakpoint>
+
+            <if>
+                <condition><var filter="bool">table.show_delete_button</var></condition>
+                <true>
+                    <div class="btn-group pull-right">
+                        <a class="btn btn-danger btn-sm btn-delete disabled"><i class="fa fa-fw fa-trash"></i> Удалить</a>
+                    </div>
+                </true>
+            </if>
+        </div>
+    </div>
+</div>
+
 
 <style>
-    .table_action_buttons { min-height: 36px; }
-    .table_action_buttons button { display: none; }
-    .table_view tr { cursor: pointer; }
-    .table_view tr:hover { background-color: lightgray; }
-    .row_selected { background-color: #015988; color: white; }
-    .row_selected:hover { background-color: #015988 !important; color: white !important; }
+    .table_view {
+        border: 1px solid #ddd;
+    }
+
+    .table_view th {
+        border-bottom-width: 1px !important;
+    }
+
+    .table_view tbody td:first-child {
+        width: 24px;
+        border-right: 1px solid #ddd;
+    }
+
+    .table_view tbody tr { cursor: pointer; }
+    .table_view tbody tr:hover { background-color: lightgrey;}
+
     .table_view tr::selection,
     .table_view tr td::selection,
     .table_view::selection 				{ background: transparent; color: inherit; }
+
     .table_view tr::-moz-selection,
     .table_view tr td::-moz-selection,
     .table_view::-moz-selection 		{  background: transparent; color: inherit; }
@@ -44,60 +126,107 @@
 
 <script>
 (function(internal) {
-
-    internal.ui.all_trigger = "input.select_all_checkbox";
-    internal.ui.row_checkbox = "td > input.row_checkbox";
-    internal.ui.row = "tr.entire_row";
+    internal.ui.select_all = ".select_all";
+    internal.ui.row = ".entire_row";
+    internal.ui.row_checkbox = ".row_checkbox";
     internal.ui.buttons = ".table_action_buttons";
 
-    internal.ui.self_selector = "table.table_view";
+    internal.ui.self_selector = ".table_view";
+    internal.buttons = [];
+    internal.config = {
+        delete_url: "/",
+        refresh_url: "/",
+        CatchOnClick: true,
+        refresh_params: {}
+    };
 
     internal.api.createListeners = function () {
-        suit.connect(internal.ui.row, "click", function() {
-            $(this).parent().parent().find(".row_selected").removeClass("row_selected");
-            $(this).addClass("row_selected");
+        internal.connect(".btn-add", "click", function(){
+            internal.events_controller.broadcast("add");
+        });
+
+        internal.connect(".btn-delete", "click", function(){
+            internal.events_controller.broadcast("delete", internal.api.get_selected());
+        });
+
+        internal.connect(".btn-edit", "click", function(event){
+            internal.events_controller.broadcast("edit", $(this).closest(internal.ui.row).find(internal.ui.row_checkbox).val());
+            event.stopPropagation();
+        });
+
+        internal.connect(internal.ui.row, "click", function() {
             internal.events_controller.broadcast("RowClicked", $(this));
         });
 
-        suit.connect(internal.ui.row, "dblclick", function() {
+        internal.connect(internal.ui.row, "dblclick", function() {
             internal.events_controller.broadcast("RowDoubleClicked", $(this));
             return false;
         });
 
-        suit.connect(internal.ui.all_trigger, "click", function() {
+        internal.connect(internal.ui.select_all, "click", function() {
+            $(this).closest(internal.ui.self_selector)
+                   .find(internal.ui.row_checkbox)
+                   .prop("checked", $(this).prop('checked'));
+
+
             if ($(this).prop('checked')) {
-                $(internal.ui.buttons).find("button").show();
                 internal.events_controller.broadcast("MultipleRowsSelected");
             } else {
-                $(internal.ui.buttons).find("button").hide();
                 internal.events_controller.broadcast("NoRowsSelected");
             }
-            $($(this).parents("table")[0]).find("input").prop("checked", $(this).prop('checked'));
         });
 
-        suit.connect(internal.ui.row_checkbox, "click", function() {
-            var table = $($(this).parents("table")[0]);
-            table.find(internal.ui.all_trigger).prop('checked', false);
+        internal.connect(internal.ui.row_checkbox, "click", function(event) {
+            var table = $(this).closest(internal.ui.self_selector);
             var checked_count = table.find("input.row_checkbox:checked").length;
+            var checkbox_count = table.find("input.row_checkbox").length;
+            var check_all = table.find(internal.ui.select_all);
 
-            if ($(this).prop('checked')) {
-                $(internal.ui.buttons).find("button").show();
-            } else {
-                if (checked_count > 0) {
-                    $(internal.ui.buttons).find("button").show();
-                } else {
-                    $(internal.ui.buttons).find("button").hide();
-                    $(internal.ui.buttons).find("button").hide();
-                }
-            }
+            check_all.prop("checked", checked_count == checkbox_count);
 
-            if (checked_count == 1) {
-                internal.events_controller.broadcast("SingleRowSelected");
-            } else if (checked_count == 0 ) {
+            if (checked_count == 0) {
                 internal.events_controller.broadcast("NoRowsSelected");
+            } else if (checked_count == 1 ) {
+                internal.events_controller.broadcast("SingleRowSelected");
             } else {
                 internal.events_controller.broadcast("MultipleRowsSelected");
             }
+
+            event.stopPropagation();
+        });
+
+        /* Select row */
+        suit.connect(internal.api, "RowClicked", internal.self, function(that) {
+            if (!!internal.config["CatchOnClick"]) {
+                $(that).closest(internal.ui.row)
+                       .find(internal.ui.row_checkbox)
+                       .click();
+            }
+        });
+
+        /* Disable buttons */
+        suit.connect(internal.api, "NoRowsSelected", internal.self, function(that) {
+            $(".btn-delete", internal.self).addClass("disabled");
+        });
+
+        /* Enable buttons */
+        suit.connect(internal.api, "SingleRowSelected", internal.self, function(that) {
+            $(".btn-delete", internal.self).removeClass("disabled");
+        });
+
+        /* Enable buttons */
+        suit.connect(internal.api, "MultipleRowsSelected", internal.self, function(that) {
+            $(".btn-delete", internal.self).removeClass("disabled");
+        });
+
+        suit.connect(internal.widget("elements.pager"), "PageChanged", internal.self, function(data) {
+            internal.config.refresh_params.page = data;
+            internal.api.refresh();
+        });
+
+        suit.connect(internal.widget("elements.pager_limits"), "LimitChanged", internal.self, function(data) {
+            internal.config.refresh_params.limit = data;
+            internal.api.refresh();
         });
     };
 
@@ -111,6 +240,39 @@
             arr.push($(this).val());
         });
         return arr;
+    };
+
+    internal.api.register_button = function(button){
+        internal.buttons.push(button);
+    };
+
+    internal.api.delete_selected = function(question, selected) {
+        if (confirm(question)) {
+            suit.ajax(internal.config.delete_url, {'row_id': internal.api.get_selected()}, function (response) {
+                if (response.result == true) {
+                    internal.api.refresh();
+                }
+            })
+        }
+    };
+
+    internal.api.config = function(config) {
+        $.extend(internal.config, config);
+    };
+
+    internal.api.refresh = function() {
+        suit.ajax(internal.config.refresh_url, internal.config.refresh_params, function(response){
+            if (response.result) {
+                internal.config.refresh_params.page = response.result.table.pager.value;
+                internal.config.refresh_params.limit = response.result.table.pager.limits.value;
+                internal.refresh(response.result);
+                internal.events_controller.broadcast("NoRowsSelected");
+            }
+        });
+    };
+
+    internal.api.hide = function() {
+        $(internal.self).hide();
     };
 
     internal.api.on = internal.events_controller.on;

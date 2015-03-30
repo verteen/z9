@@ -1,0 +1,43 @@
+<div class="btn-group ui-container data-container" data-template-name="elements.pager">
+    <if>
+        <condition><var>table.pager.value</var> == 1</condition>
+        <true><a class="btn btn-default btn-sm active" data-page="1"><i class="fa fa-fw fa-angle-double-left"></i></a></true>
+        <false><a class="btn btn-default btn-sm" data-page="1"><i class="fa fa-fw fa-angle-double-left"></i></a></false>
+    </if>
+
+    <list for="p" in="table.pager.values">
+        <if>
+            <condition>'<var>p</var>' == '...'</condition>
+            <true><a class="btn btn-default btn-sm"><var>p</var></a></true>
+            <false>
+                <if>
+                    <condition><var>p</var> == <var>table.pager.value</var></condition>
+                    <true><a class="btn btn-default btn-sm active" data-page="<var>p</var>"><var>p</var></a></true>
+                    <false><a class="btn btn-default btn-sm" data-page="<var>p</var>"><var>p</var></a></false>
+                </if>
+            </false>
+        </if>
+    </list>
+
+    <if>
+        <condition><var>table.pager.value</var> == <var>table.pager.max_value</var></condition>
+        <true><a class="btn btn-default btn-sm active" data-page="<var>table.pager.max_value</var>"><i class="fa fa-fw fa-angle-double-right"></i></a></true>
+        <false><a class="btn btn-default btn-sm" data-page="<var>table.pager.max_value</var>"><i class="fa fa-fw fa-angle-double-right"></i></a></false>
+    </if>
+</div>
+
+<script>
+(function(internal){
+    internal.api.createListeners = function(){
+        internal.connect("a", "click", function(){
+            var page = parseInt($(this).data("page"));
+            if (page) {
+                internal.events_controller.broadcast("PageChanged", page);
+            }
+            return false;
+        });
+    };
+
+    internal.api.on = internal.events_controller.on;
+})
+</script>
