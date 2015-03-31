@@ -78,9 +78,10 @@ class AuthController(Controller):
             account = cls.auth_service().authentificate_by_request(request)
             if account:
                 request.response.set_cookie(
-                    "token", account.set_new_token(), path="/", expires=datetime.now() + timedelta(seconds=30*60)
+                    "token", account.set_new_token() if not request.get("use_prev_token", False) else account.token,
+                    path="/", expires=datetime.now() + timedelta(seconds=30*60)
                 )
-                return {"redirect_to": cls.root}
+                return {"redirect_to": cls.root} if not request.get("use_prev_token", False) else True
         except (NoDataForAuth, IncorrectToken) as err:
             request.response.set_cookie(
                 "token", "", path="/", expires=datetime.now() - timedelta(seconds=30*60)
