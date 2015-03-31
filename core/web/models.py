@@ -4,6 +4,7 @@ from collections import OrderedDict
 from envi import Request
 from z9.core.exceptions import CommonException
 from math import ceil
+from z9.core.utils import pretty_print
 
 
 class MenuItem(object):
@@ -198,12 +199,12 @@ class TableView(CollectionModel):
     """ Класс для представления коллекции в виде структуры данных пригодной для использования в шаблонизаторе """
     template = ""
     title = None
-    header = None
-    properties = None
-    boundaries = None
-    params = None
-    sort = None
-    filter = None
+    header = []
+    properties = []
+    boundaries = {}
+    params = {}
+    sort = []
+    filters = []
 
 
     record_exists_exception = CommonException("Row exists already")
@@ -212,9 +213,7 @@ class TableView(CollectionModel):
     def __init__(self, *boundaries, **kwargs):
         super().__init__(*boundaries, **kwargs)
         self._orders = {}
-        self.boundaries = {}
-        self.params = {}
-        for prop in self.properties:
+        for prop in filter(None, self.sort):
             self._orders.update({'{prop}-asc'.format(prop=prop): (prop, 'ASC')})
             self._orders.update({'{prop}-desc'.format(prop=prop): (prop, 'DESC')})
 
@@ -232,9 +231,10 @@ class TableView(CollectionModel):
         if limit and limit > 0:
             params.update({"skip": skip, "limit": limit})
 
-        rows = OrderedDict()
+        rows = []
         for item in self.get_items(self.boundaries, params=params):
-            rows[item.primary.value] = item.stringify(self.properties)
+            rows.append([item.primary.value, item.stringify(self.properties)])
+
         return rows
 
     def set_sub_boundaries(self, sub_boundaries: dict):
@@ -257,14 +257,12 @@ class TableView(CollectionModel):
 
         pager = LinearPager(self, request)
 
-
-
         return {
             "template": self.template,
             "title": self.title,
             "header": [{
                 "title": self.header[key],
-                "sort": {"asc": p + "-asc", "desc": p + "-desc"} if self.sort and (p in self.sort) else None
+                "sort": {"asc": self.sort[key] + "-asc", "desc": self.sort[key] + "-desc"} if len(self.sort) >= key + 1 and self.sort[key] is not None else None
             }
                 for key, p in enumerate(self.properties)
 
