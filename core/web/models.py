@@ -150,8 +150,12 @@ class Pager(object):
             self._page = 1
 
         self._pages_count = ceil(items_count / self._limit)
-        self._page = max(self._page, 1)
-        self._page = min(self._page, self._pages_count)
+
+        if self._page < 1:
+            self._page = 1
+
+        if 0 < self._pages_count < self._page:
+            self._page = self._pages_count
 
         self.pages_factory()
 
