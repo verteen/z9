@@ -40,7 +40,7 @@ class MenuItem(object):
             "alias": self.alias,
             "css_class": self.css_class,
             "childs": self.sub_menu.get_full(),
-            "active": url.startswith(self.url)
+            "active": (url.rstrip("/") + "/").startswith(self.url.rstrip("/") + "/")
         }
 
     @property
