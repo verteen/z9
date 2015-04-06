@@ -205,7 +205,6 @@ class TableView(CollectionModel):
     title = None
     header = []
     properties = []
-    boundaries = {}
     params = {}
     sort = []
     filters = []
@@ -221,6 +220,7 @@ class TableView(CollectionModel):
             self._orders.update({'{prop}-asc'.format(prop=prop): (prop, 'ASC')})
             self._orders.update({'{prop}-desc'.format(prop=prop): (prop, 'DESC')})
 
+        self.boundaries = {}
         for bounds in boundaries:
             self.boundaries.update(bounds)
 
