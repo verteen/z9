@@ -138,6 +138,7 @@ class bcolors:
 def apply_migrations(migrations_path, pool: Pool):
     from z9.core.models import Migration
 
+    Migration.mapper.kill_instance()
     Migration.mapper.pool = pool
 
     migrations = sorted(os.listdir(migrations_path)) if migrations_path and os.path.exists(migrations_path) else []
