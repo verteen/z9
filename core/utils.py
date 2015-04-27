@@ -265,3 +265,33 @@ def pretty_print(something):
     table = PrettyTable(header)
     table.add_row([str(val) for val in values])
     print(table)
+
+
+class flexdict(dict):
+    """ Словарь понимает точечную нотацию, возвращает новый flexdict при запросе несуществующего атрибута """
+    _setparent_cb = lambda self: None
+
+    def __getitem__(self, item):
+        try:
+            return super().__getitem__(item)
+        except KeyError:
+            child = flexdict()
+
+            def _setparent_cb():
+                self[item] = child
+
+            object.__setattr__(child, "_setparent_cb", _setparent_cb)
+            return child
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self._setparent_cb()
+
+    def __getattribute__(self, item):
+        try:
+            return super().__getattribute__(item)
+        except AttributeError:
+            return self[item]
+
+    def __setattr__(self, key, value):
+        self.__setitem__(key, value)
