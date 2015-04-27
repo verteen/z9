@@ -3,7 +3,7 @@
 """
 
 from z9.core.models import EntityModelTest
-from z9.core.auth.models import Account, Accounts, AuthentificationService
+from z9.core.auth.models import Account, Accounts, AuthentificationService, AccountSetting
 from z9.core.auth.exceptions import *
 
 from z9.core.utils import md5
@@ -96,3 +96,32 @@ class AuthentificationServiceTests(EntityModelTest):
         account.refresh()
         self.assertNotEqual("12345", account.password)
         self.assertEqual(md5(new_password), account.password)
+
+
+class AccountSettingsTests(EntityModelTest):
+    model_for_test = AccountSetting
+
+    def test_lvl_1_depth(self):
+        account = Account({"login": "user", "password": "123"}).save()
+        account.settings.a = 1
+        account.save_settings()
+        account.settings.a = 1
+        account.save_settings()
+
+        self.assertEqual(1, len(account.settings_raw))
+        self.assertEqual(1, account.settings.a)
+
+        account = Accounts().get_item({"login": "user"})
+        self.assertEqual("1", account.settings.a)
+
+    def test_lvl_2_depth(self):
+        account = Account({"login": "user", "password": "123"}).save()
+        account.settings.a.b = 1
+        account.save_settings()
+
+        account = Accounts().get_item({"login": "user"})
+        self.assertEqual("1", account.settings.a.b)
+
+    def tearDown(self):
+        super().tearDown()
+        Accounts().delete()

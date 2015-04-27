@@ -132,6 +132,7 @@ class Database(object):
     def migrate(self):
         apply_migrations(self._migrations_path, self.pool)
 
+
 class EntityModelTest(unittest.TestCase):
     model_for_test = EntityModel
 

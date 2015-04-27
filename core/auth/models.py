@@ -9,9 +9,10 @@ from datetime import datetime
 
 from mapex import EntityModel, CollectionModel
 from envi import Request
-from z9.core.auth.mappers import AccountsMapper
+from z9.core.auth.mappers import AccountsMapper, AccountSettingsMapper
 from z9.core.auth.exceptions import *
-from z9.core.utils import md5
+from z9.core.utils import md5, flexdict, flat_dict
+from mapex.src.Utils import do_dict, merge_dict
 
 
 class Accounts(CollectionModel):
@@ -47,6 +48,18 @@ class Account(EntityModel):
         self.save()
         return self.token
 
+    @property
+    def settings(self):
+        if not hasattr(self, "_settings"):
+            self._settings = flexdict()
+            for setting in self.settings_raw:
+                self._settings = merge_dict(self._settings, do_dict(setting.name, setting.value, cls=flexdict), cls=flexdict)
+        return self._settings
+
+    def save_settings(self):
+        self.mark_as_changed()
+        return self.save()
+
     def validate(self):
         """
         Валидация сущности учетной записи
@@ -57,6 +70,18 @@ class Account(EntityModel):
             raise NoLoginForAccount()
         if not self.password_raw or self.password_raw == "d41d8cd98f00b204e9800998ecf8427e":
             raise NoPasswordForAccount()
+
+        self.settings_raw = [
+            AccountSetting({"name": name, "value": str(value)}) for name, value in flat_dict(self.settings).items()
+        ]
+
+
+class AccountSettings(CollectionModel):
+    mapper = AccountSettingsMapper
+
+
+class AccountSetting(EntityModel):
+    mapper = AccountSettingsMapper
 
 
 class AuthentificationService(object):
