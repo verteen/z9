@@ -295,3 +295,16 @@ class flexdict(dict):
 
     def __setattr__(self, key, value):
         self.__setitem__(key, value)
+
+
+def flat_dict(d: dict, sep="."):
+    """ Делает многомерный словарь плоским; конкатенирует ключи вложенных массивов """
+    res = flexdict()
+    for key, value in d.items():
+        if isinstance(value, dict):
+            for k, v in flat_dict(value).items():
+                res[sep.join([key, k])] = v
+        else:
+            res[key] = value
+
+    return res
