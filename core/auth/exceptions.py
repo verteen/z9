@@ -1,7 +1,6 @@
 
 from z9.core.exceptions import CommonException
 
-
 # noinspection PyDocstring
 class NoLoginForAccount(CommonException):
     message = "Не указан логин для нового аккаунта"
@@ -45,3 +44,31 @@ class NoDataForAuth(CommonException):
 # noinspection PyDocstring
 class AuthorizationError(CommonException):
     message = "Ошибка авторизации"
+
+
+class IncorrectVerificationCode(CommonException):
+    message = "Код верификации указан неправильно"
+
+
+class IncorrectVerificationCodeFatal(CommonException):
+    message = "Сбой верификации. Процедуру придется повторить с самого начала."
+
+
+class AlreadyRegistred(CommonException):
+    message = "Вы уже зарегистрированы в системе. " \
+              "Если Вы не помните свой пароль - воспользуйтесь возможностью восстановления пароля: " \
+              "новый пароль будет выслан Вам в смс-сообщении."
+
+
+class SmsError(CommonException):
+    message = "По техническим причинам отправка смс-сообщений, " \
+              "а следовательно и авторизация/восстановление пароля временно недоступны. "\
+              "Приносим свои извинения за доставленные неудобства!"
+
+
+class NotRegisteredYet(CommonException):
+    message = "Пользователь с таким телефоном еще не зарегистрирован в системе"
+
+
+class EmailIsVerified(CommonException):
+    message = "Ваш email уже подтвержден ранее, вы можете получить пароль по электронной почте"

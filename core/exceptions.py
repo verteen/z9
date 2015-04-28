@@ -21,5 +21,5 @@ class CommonException(Exception):
 class InvalidPhoneNumber(CommonException):
     """ Исключение, возникающее, если для форматирования передан некорректный телефонный номер """
     def __init__(self, number):
-        self.message = "Некорректный номер телефона: %s" % number
+        self.message = "Некорректный номер телефона %s" % number if number and len(number) else "Не указан номер телефона"
         super().__init__()
