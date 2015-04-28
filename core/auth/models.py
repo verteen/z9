@@ -92,10 +92,8 @@ class AuthentificationService(object):
 
     """
 
-    def __init__(self):
-        self.accounts = Accounts()
-
-    def authentificate(self, credentials: tuple=None, token: str=None) -> Account:
+    @classmethod
+    def authentificate(cls, credentials: tuple=None, token: str=None) -> Account:
         """
         Выполняет аутентификацию пользователя по переданным данным
         @param credentials: tuple (логин, пароль)
@@ -106,24 +104,26 @@ class AuthentificationService(object):
 
         """
         if credentials:
-            return self.authentificate_by_credentials(*credentials)
+            return cls.authentificate_by_credentials(*credentials)
         elif token:
-            return self.authentificate_by_token(token)
+            return cls.authentificate_by_token(token)
         else:
             raise NoDataForAuth()
 
-    def authentificate_by_request(self, request: Request):
+    @classmethod
+    def authentificate_by_request(cls, request: Request):
         """
         Выполняет аутентификацию пользователя по переданному объекту Request
         :param request: Запрос пользователя
         :return:
         """
-        return self.authentificate(
+        return cls.authentificate(
             (request.get("login"), request.get("password")) if request.get("login", False) else None,
             request.get("token", False)
         )
 
-    def authentificate_by_token(self, token: str) -> Account:
+    @classmethod
+    def authentificate_by_token(cls, token: str) -> Account:
         """
         Выполняет аутентификацию пользователя по переданному токену
         @param token: Токен для авторизации
@@ -131,13 +131,14 @@ class AuthentificationService(object):
         @return: Аккаунт пользователя
 
         """
-        account_found = self.accounts.get_item({"token": token})
+        account_found = Accounts().get_item({"token": token})
         if account_found:
             return account_found
         else:
             raise IncorrectToken()
 
-    def authentificate_by_credentials(self, login, password) -> Account:
+    @classmethod
+    def authentificate_by_credentials(cls, login, password) -> Account:
         """
         Выполняет аутентификацию пользователя по переданным логину и паролю
         @param login: Логин
@@ -147,7 +148,7 @@ class AuthentificationService(object):
         @return: Аккаунт пользователя
 
         """
-        account_found = self.accounts.get_item({"login": login})
+        account_found = Accounts().get_item({"login": login})
         if account_found:
             if account_found.password != md5(password):
                 raise IncorrectPassword()
@@ -155,24 +156,25 @@ class AuthentificationService(object):
         else:
             raise IncorrectLogin()
 
-    def change_password(self, login: str) -> str:
+    @classmethod
+    def change_password(cls, login: str) -> str:
         """
         Меняет пароль аккаунта и возвращает новый
 
         @param login: Логин
         @return: Новый пароль
         """
-        account = self.accounts.get_item({"login": login})
+        account = Accounts().get_item({"login": login})
         if not account:
             raise IncorrectLogin()
         account.set_new_token()
-        new_passw = self.gen_password()
+        new_passw = cls.gen_password()
         account.password = new_passw
         account.save()
         return new_passw
 
-    @staticmethod
-    def gen_password():
+    @classmethod
+    def gen_password(cls):
         """
         Генерирует читабельный пароль
         :return:
