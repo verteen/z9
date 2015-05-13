@@ -152,11 +152,8 @@ class AuthController(Controller):
             random.choice(range(9)), random.choice(range(9)), random.choice(range(9)), random.choice(range(9))
         )
         user.save()
-        #r = SMSC().send_sms(phone.replace("+", ""), "REPAEM.RU\nКод подтверждения: %s" % user.verification_code, sender="repaem.ru")
-        r = True
-        if r:
-            return user.verification_code
-        raise SmsError()
+        cls.auth_service().send_sms(phone.replace("+", ""), "REPAEM.RU\nКод подтверждения: %s" % user.verification_code)
+        return True
 
     @classmethod
     def fast_registration_stage2(cls, user, request: Request, **kwargs):
@@ -208,13 +205,8 @@ class AuthController(Controller):
             random.choice(range(9)), random.choice(range(9)), random.choice(range(9)), random.choice(range(9))
         )
         target_user.save()
-        #r = SMSC().send_sms(phone.replace("+", ""), "REPAEM.RU\nКод подтверждения: %s" % target_user.verification_code, sender="repaem.ru")
-        r = True
+        cls.auth_service().send_sms(phone.replace("+", ""), "REPAEM.RU\nКод подтверждения: %s" % target_user.verification_code)
         cls.auth_service().send_code(target_user.email, target_user.verification_code2)
-        if r:
-            return target_user.verification_code, target_user.verification_code2
-        else:
-            raise SmsError()
 
     @classmethod
     def recover_password(cls, user, request: Request, **kwargs):
