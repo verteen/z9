@@ -249,22 +249,26 @@ class FunctionalTestCase(unittest.TestCase):
             self.assertEqual(value, cookies.get(cookie))
 
 
-def pretty_print(something):
-    from prettytable import PrettyTable
-    header = []
-    values = []
+def pretty_print(something, tableview=True):
+    if tableview:
+        from prettytable import PrettyTable
+        header = []
+        values = []
 
-    if isinstance(something, dict):
-        header = something.keys()
-        values = something.values()
-    elif isinstance(something, list):
-        values = something
-    elif isinstance(something, tuple):
-        values = list(something)
+        if isinstance(something, dict):
+            header = something.keys()
+            values = something.values()
+        elif isinstance(something, list):
+            values = something
+        elif isinstance(something, tuple):
+            values = list(something)
 
-    table = PrettyTable(header)
-    table.add_row([str(val) for val in values])
-    print(table)
+        table = PrettyTable(header)
+        table.add_row([str(val) for val in values])
+        print(table)
+    else:
+        import json
+        print(json.dumps(something, indent=4, ensure_ascii=False))
 
 
 class flexdict(dict):
