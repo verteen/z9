@@ -59,7 +59,7 @@ class AuthController(Controller):
             request.set("token", account.set_new_token())
             cls.auth(request)
         if auto_register:
-            cls.users_collection().get_new_item().load_from_array({"name": "user", "account": account}).save()
+            cls.users_collection().get_new_item().load_from_array({"name": "Анонимный пользователь", "account": account}).save()
         return account
 
     @staticmethod
