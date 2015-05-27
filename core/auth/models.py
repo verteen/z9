@@ -174,6 +174,27 @@ class AuthentificationService(object):
         return new_passw
 
     @classmethod
+    def set_new_password(cls, account, current_password: str, new_password: str, new_password2: str) -> str:
+        """
+        Меняет пароль аккаунта на новый
+        @param account: Объект аккаунта пользователя
+        @param current_password: Текущий пароль
+        @param new_password: Новый пароль
+        @param new_password2: Подтверждение нового пароля
+        @return: Новый пароль
+        """
+        if not account:
+            raise IncorrectLogin()
+        if account.password != md5(current_password):
+            raise IncorrectPassword()
+        if new_password != new_password2:
+            raise NewPasswordsMismatch()
+        account.password = new_password
+        account.save()
+        return True
+
+
+    @classmethod
     def gen_password(cls):
         """
         Генерирует читабельный пароль

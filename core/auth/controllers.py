@@ -118,6 +118,21 @@ class AuthController(Controller):
         return cls.auth_service().change_password(request.get("login"))
 
     @classmethod
+    def set_new_password(cls, user, request: Request, **kwargs):
+        """ Меняет пароль аккаунта на новый, указанный пользователем
+
+        @param request:
+        @param kwargs:
+        @return:
+        """
+        return cls.auth_service().set_new_password(
+            user.account,
+            request.get("current_password"),
+            request.get("new_password"),
+            request.get("new_password2")
+        )
+
+    @classmethod
     def ajax_auth(cls, user, request: Request, **kwargs):
         request.set("login", Phone(request.get("login")).get_value())
         if AuthController.auth(request, **kwargs):

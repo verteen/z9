@@ -41,6 +41,9 @@ class NoDataForAuth(CommonException):
     message = "Ошибка аутентификации. Недостаточно данных для аутентификации."
 
 
+class NewPasswordsMismatch(CommonException):
+    message = "Новый пароль и его подтверждение не совпадают."
+
 # noinspection PyDocstring
 class AuthorizationError(CommonException):
     message = "Ошибка авторизации"
