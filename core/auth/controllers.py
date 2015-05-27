@@ -125,12 +125,22 @@ class AuthController(Controller):
         @param kwargs:
         @return:
         """
-        return cls.auth_service().set_new_password(
+        if not user.phone_verified:
+            raise NotRegisteredYet()
+        res = cls.auth_service().set_new_password(
             user.account,
             request.get("current_password"),
             request.get("new_password"),
             request.get("new_password2")
         )
+        if res:
+            cls.auth_service().send_sms(
+                user.phone.replace("+", ""), "%s\nПароль изменен.\nНовый пароль: %s" % (
+                    cls.auth_service().smtp_config.sms_sender, request.get("new_password")
+                )
+            )
+        return res
+
 
     @classmethod
     def ajax_auth(cls, user, request: Request, **kwargs):
@@ -167,7 +177,11 @@ class AuthController(Controller):
             random.choice(range(9)), random.choice(range(9)), random.choice(range(9)), random.choice(range(9))
         )
         user.save()
-        cls.auth_service().send_sms(phone.replace("+", ""), "REPAEM.RU\nКод подтверждения: %s" % user.verification_code)
+        cls.auth_service().send_sms(
+            phone.replace("+", ""), "%s\nКод подтверждения: %s" % (
+                cls.auth_service().smtp_config.sms_sender, user.verification_code
+            )
+        )
         return True
 
     @classmethod
@@ -183,7 +197,15 @@ class AuthController(Controller):
             user.phone_verified = True
             user.verification_code = None
             user.verification_code_failed_attempts = 0
+            passw = cls.auth_service().gen_password()
+            user.account.password = passw
+
             user.save()
+            cls.auth_service().send_sms(
+                user.account.login.replace("+", ""), "%s\nВы успешно зарегистрированы!\nВаш пароль: %s" % (
+                    cls.auth_service().smtp_config.sms_sender, passw
+                )
+            )
             return {
                 "user": user.stringify(["position_name", "name", "phone", "phone_verified", "email", "email_verified"]),
                 "preview_randomizer": datetime.now().microsecond
@@ -220,7 +242,11 @@ class AuthController(Controller):
             random.choice(range(9)), random.choice(range(9)), random.choice(range(9)), random.choice(range(9))
         )
         target_user.save()
-        cls.auth_service().send_sms(phone.replace("+", ""), "REPAEM.RU\nКод подтверждения: %s" % target_user.verification_code)
+        cls.auth_service().send_sms(
+            phone.replace("+", ""), "%s\nКод подтверждения: %s" % (
+                cls.auth_service().smtp_config.sms_sender, target_user.verification_code
+            )
+        )
         cls.auth_service().send_code(target_user.email, target_user.verification_code2)
 
     @classmethod
