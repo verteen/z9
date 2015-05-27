@@ -6,6 +6,8 @@
 
 import random
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
 
 from mapex import EntityModel, CollectionModel
 from envi import Request
@@ -91,6 +93,7 @@ class AuthentificationService(object):
     под которым пользователь аутентифицирован
 
     """
+    smtp_config = None
 
     @classmethod
     def authentificate(cls, credentials: tuple=None, token: str=None) -> Account:
@@ -193,6 +196,30 @@ class AuthentificationService(object):
         account.save()
         return True
 
+    @classmethod
+    def send_email(cls, email, subject, html):
+        message = MIMEText(html, "html", "utf-8")
+        message['Subject'] = subject
+        message['From'] = cls.smtp_config.emailfrom
+        message['To'] = email
+        message['Reply-To'] = cls.smtp_config.emailfrom
+        conn = smtplib.SMTP_SSL(host=cls.smtp_config.emailsmtp[0], port=cls.smtp_config.emailsmtp[1])
+        conn.login(cls.smtp_config.emailfrom, cls.smtp_config.emailpass)
+        conn.sendmail(cls.smtp_config.emailfrom, email, message.as_string())
+        conn.quit()
+        return True
+
+    @classmethod
+    def send_sms(cls, phone, text, try_to_use_email=False):
+        raise SmsError
+
+    @classmethod
+    def send_code(cls, email: str, code):
+        return True
+
+    @classmethod
+    def send_email_confirmation_success(cls, email):
+        return True
 
     @classmethod
     def gen_password(cls):

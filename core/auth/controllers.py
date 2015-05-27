@@ -135,12 +135,11 @@ class AuthController(Controller):
         )
         if res:
             cls.auth_service().send_sms(
-                user.phone.replace("+", ""), "%s\nПароль изменен.\nНовый пароль: %s" % (
+                user.phone, "%s\nВаш пароль изменен.\nНовый пароль: %s" % (
                     cls.auth_service().smtp_config.sms_sender, request.get("new_password")
-                )
+                ), try_to_use_email=True
             )
         return res
-
 
     @classmethod
     def ajax_auth(cls, user, request: Request, **kwargs):
@@ -178,7 +177,7 @@ class AuthController(Controller):
         )
         user.save()
         cls.auth_service().send_sms(
-            phone.replace("+", ""), "%s\nКод подтверждения: %s" % (
+            phone, "%s\nКод подтверждения: %s" % (
                 cls.auth_service().smtp_config.sms_sender, user.verification_code
             )
         )
@@ -202,7 +201,7 @@ class AuthController(Controller):
 
             user.save()
             cls.auth_service().send_sms(
-                user.account.login.replace("+", ""), "%s\nВы успешно зарегистрированы!\nВаш пароль: %s" % (
+                user.phone, "%s\nВы успешно зарегистрированы!\nВаш пароль: %s" % (
                     cls.auth_service().smtp_config.sms_sender, passw
                 )
             )
@@ -243,7 +242,7 @@ class AuthController(Controller):
         )
         target_user.save()
         cls.auth_service().send_sms(
-            phone.replace("+", ""), "%s\nКод подтверждения: %s" % (
+            phone, "%s\nКод подтверждения: %s" % (
                 cls.auth_service().smtp_config.sms_sender, target_user.verification_code
             )
         )
@@ -287,6 +286,7 @@ class AuthController(Controller):
             target_user.verification_code_failed_attempts = 0
             target_user.save()
             user.refresh()
+            cls.auth_service().send_email_confirmation_success(target_user.email)
             return {
                 "user": user.stringify(["position_name", "name", "phone", "phone_verified", "email", "email_verified"]),
                 "preview_randomizer": datetime.now().microsecond
