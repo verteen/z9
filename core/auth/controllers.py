@@ -118,7 +118,7 @@ class AuthController(Controller):
         return cls.auth_service().change_password(request.get("login"))
 
     @classmethod
-    def set_new_password(cls, user, request: Request, **kwargs):
+    def set_new_password(cls, user, request: Request, host, **kwargs):
         """ Меняет пароль аккаунта на новый, указанный пользователем
 
         @param request:
@@ -137,7 +137,7 @@ class AuthController(Controller):
             cls.auth_service().send_sms(
                 user.phone, "%s\nВаш пароль изменен.\nНовый пароль: %s" % (
                     cls.auth_service().smtp_config.sms_sender, request.get("new_password")
-                ), try_to_use_email=True
+                ), user, try_to_use_email=True, msg_type="PASSWORD_CHANGED", host=host
             )
         return res
 
@@ -160,7 +160,7 @@ class AuthController(Controller):
             raise NotRegisteredYet()
 
     @classmethod
-    def fast_registration_stage1(cls, user, request: Request, **kwargs):
+    def fast_registration_stage1(cls, user, request: Request, host, **kwargs):
         if user.phone_verified:
             raise AlreadyRegistred()
 
@@ -179,12 +179,13 @@ class AuthController(Controller):
         cls.auth_service().send_sms(
             phone, "%s\nКод подтверждения: %s" % (
                 cls.auth_service().smtp_config.sms_sender, user.verification_code
-            )
+            ),
+            user, msg_type="AUTH_CONFIRM", host=host
         )
         return True
 
     @classmethod
-    def fast_registration_stage2(cls, user, request: Request, **kwargs):
+    def fast_registration_stage2(cls, user, request: Request, host, **kwargs):
         if not user.verification_code:
             user.phone_verified = False
             user.verification_code = None
@@ -203,7 +204,7 @@ class AuthController(Controller):
             cls.auth_service().send_sms(
                 user.phone, "%s\nВы успешно зарегистрированы!\nВаш пароль: %s" % (
                     cls.auth_service().smtp_config.sms_sender, passw
-                )
+                ), user, msg_type="REGISTRATION_COMPLETED", host=host
             )
             return {
                 "user": user.stringify(["position_name", "name", "phone", "phone_verified", "email", "email_verified"]),
@@ -223,7 +224,7 @@ class AuthController(Controller):
                 raise IncorrectVerificationCodeFatal()
 
     @classmethod
-    def send_recovery_codes(cls, user, request: Request, **kwargs):
+    def send_recovery_codes(cls, user, request: Request, host, **kwargs):
         phone = Phone(request.get("phone")).get_value()
 
         target_user = cls.users_collection().get_item({"account.login": phone, "phone_verified": True})
@@ -244,7 +245,7 @@ class AuthController(Controller):
         cls.auth_service().send_sms(
             phone, "%s\nКод подтверждения: %s" % (
                 cls.auth_service().smtp_config.sms_sender, target_user.verification_code
-            )
+            ), user, msg_type="AUTH_CONFIRM", host=host
         )
         cls.auth_service().send_code(target_user.email, target_user.verification_code2)
 

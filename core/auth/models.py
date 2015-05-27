@@ -210,7 +210,7 @@ class AuthentificationService(object):
         return True
 
     @classmethod
-    def send_sms(cls, phone, text, try_to_use_email=False):
+    def send_sms(cls, phone, text, user, try_to_use_email=False, msg_type=None, host=None, paid_by=None):
         raise SmsError
 
     @classmethod
