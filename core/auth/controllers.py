@@ -84,7 +84,7 @@ class AuthController(Controller):
             if account:
                 request.response.set_cookie(
                     "token", account.set_new_token() if not request.get("use_prev_token", False) else account.token,
-                    path="/", expires=datetime.now() + timedelta(seconds=30*60)
+                    path="/", expires=datetime.now() + timedelta(days=30)
                 )
                 return {"redirect_to": cls.root} if not request.get("use_prev_token", False) else True
         except (NoDataForAuth, IncorrectToken) as err:
