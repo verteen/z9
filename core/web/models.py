@@ -237,7 +237,7 @@ class TableView(CollectionModel):
 
         rows = []
         for item in self.get_items(self.boundaries, params=params):
-            rows.append([item.primary.value, item.stringify(self.properties)])
+            rows.append([item.primary.get_value(deep=True), item.stringify(self.properties)])
 
         return rows
 
@@ -314,6 +314,7 @@ class TableView(CollectionModel):
         data = model.stringify(self.mapper.get_properties())
         for p in self.mapper.get_properties():
             attr = model.__getattribute__(p)
+
             if isinstance(attr, EmbeddedObject):
                 data[p] = attr.get_value()
             if isinstance(attr, EntityModel):
