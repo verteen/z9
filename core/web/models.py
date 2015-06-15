@@ -207,7 +207,8 @@ class TableView(CollectionModel):
     properties = []
     params = {}
     sort = []
-    filters = []
+    filter_autocomplete = []
+    filter_select = []
 
 
     record_exists_exception = CommonException("Row exists already")
@@ -259,6 +260,13 @@ class TableView(CollectionModel):
             if request.get('sort', None) in self._orders\
             else None
 
+        for key,value in request.get("filter_autocomplete", {}).items():
+            self.set_sub_boundaries({key: ("match", "%" + value + "%")})
+
+        for key,value in request.get("filter_select", {}).items():
+            if value:
+                self.set_sub_boundaries({key: value})
+
         pager = LinearPager(self, request)
 
         return {
@@ -266,7 +274,9 @@ class TableView(CollectionModel):
             "title": self.title,
             "header": [{
                 "title": self.header[key],
-                "sort": {"asc": self.sort[key] + "-asc", "desc": self.sort[key] + "-desc"} if len(self.sort) >= key + 1 and self.sort[key] is not None else None
+                "sort": {"asc": self.sort[key] + "-asc", "desc": self.sort[key] + "-desc"} if len(self.sort) >= key + 1 and self.sort[key] is not None else None,
+                "filter_autocomplete": self.filter_autocomplete[key] if len(self.filter_autocomplete) > key and self.filter_autocomplete[key] is not None else None,
+                "filter_select": self.filter_select[key] if len(self.filter_select) > key and self.filter_select[key] is not None else None
             }
                 for key, p in enumerate(self.properties)
 
