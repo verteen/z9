@@ -6,6 +6,7 @@ import hashlib
 import unittest
 import webtest
 import json
+import time
 from datetime import datetime
 from itertools import filterfalse, chain
 from importlib import import_module
@@ -315,3 +316,18 @@ def flat_dict(d: dict, sep=".", cls=flexdict):
             res[key] = value
 
     return res
+
+
+class Profiler(object):
+    def __init__(self):
+        self._startTime = 0
+
+    def __enter__(self):
+        self._startTime = time.time()
+        return self
+
+    def __exit__(self, etype, value, traceback):
+        pass
+
+    def get_amount(self):
+        return "Elapsed time: {:.3f} sec".format(time.time() - self._startTime)

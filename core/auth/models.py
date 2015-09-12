@@ -111,6 +111,7 @@ class AuthentificationService(object):
         elif token:
             return cls.authentificate_by_token(token)
         else:
+            print("auth_data", credentials, token)
             raise NoDataForAuth()
 
     @classmethod
@@ -120,6 +121,7 @@ class AuthentificationService(object):
         :param request: Запрос пользователя
         :return:
         """
+        print("request-token", request.get("token", False))
         return cls.authentificate(
             (request.get("login"), request.get("password")) if request.get("login", False) else None,
             request.get("token", False)
