@@ -1,0 +1,3 @@
+-e git+https://github.com/verteen/envi.git@0.1#egg=envi-0.1
+-e git+https://github.com/verteen/mapex.git@0.1#egg=mapex-0.1
+-e git+https://github.com/verteen/suit.git@0.1#egg=suit-1.1
