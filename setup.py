@@ -11,10 +11,7 @@ with open('z9/__init__.py', 'rb') as f:
 if sys.version_info < (3, 0):
     raise NotImplementedError("Sorry, you need at least Python 3.x to use z9.")
 
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='z9',
@@ -24,10 +21,10 @@ setup(
     license='',
     author='ayurjev',
     author_email='',
-    description='',
-    dependency_links=[
-        'https://github.com/verteen/envi/tarball/master#egg=envi-0.1',
-        'https://github.com/verteen/mapex/tarball/master#egg=mapex-0.1',
-        'https://github.com/verteen/suit/tarball/master#egg=suit-1.1',
-    ]
+    description=''
+    # dependency_links=[
+    #     'https://github.com/verteen/envi/tarball/master#egg=envi-0.1',
+    #     'https://github.com/verteen/mapex/tarball/master#egg=mapex-0.1',
+    #     'https://github.com/verteen/suit/tarball/master#egg=suit-1.1',
+    # ]
 )
