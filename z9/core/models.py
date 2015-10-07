@@ -8,8 +8,8 @@ from suit.Suit import Suit, TemplateNotFound
 from inspect import isabstract, isclass
 from enum import Enum
 
-from z9.core.utils import get_module_members, apply_migrations
-from z9.core.exceptions import InvalidPhoneNumber, CommonException
+from .utils import get_module_members, apply_migrations
+from .exceptions import InvalidPhoneNumber, CommonException
 
 
 class Contours(Enum):
