@@ -14,7 +14,7 @@ from envi import Request
 from z9.core.auth.mappers import AccountsMapper, AccountSettingsMapper
 from z9.core.auth.exceptions import *
 from z9.core.utils import md5, flexdict, flat_dict
-from mapex.src.Utils import do_dict, merge_dict
+from mapex.Utils import do_dict, merge_dict
 
 
 class Accounts(CollectionModel):

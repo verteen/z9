@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from distutils.util import strtobool
-from mapex.src.Adapters import NoTableFound
+from mapex.Adapters import NoTableFound
 from z9.core.models import Contours
 from z9.core.utils import bcolors
 from optparse import OptionParser
