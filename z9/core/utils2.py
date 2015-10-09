@@ -13,7 +13,7 @@ from importlib import import_module
 from inspect import getmembers
 from fcntl import flock, LOCK_EX, LOCK_NB
 
-from .exceptions import CommonException
+from z9.core.exceptions import CommonException
 from mapex import Pool
 
 root_path = "%s/../" % os.path.dirname(os.path.abspath(__file__))
@@ -38,6 +38,7 @@ def partition(predicate, iterable):
     """
     predicate = bool if predicate is None else predicate
     return filter(predicate, iterable), filterfalse(predicate, iterable)
+
 
 def unique(iter):
     """ Возвращает итератор по уникальному списку """
